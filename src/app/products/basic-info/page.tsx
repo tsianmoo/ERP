@@ -51,7 +51,7 @@ interface BasicField {
   group_id: number | null
   auto_generate: boolean  // 是否自动生成
   code_rule_id: number | null  // 关联的编码规则ID
-  product_field_groups: {
+  field_group: {
     id: number
     name: string
   } | null
@@ -2538,7 +2538,7 @@ export default function BasicInfoPage() {
                         )}
                         {colKey === 'group' && (
                           <span className={`text-sm text-gray-600 ${allowWrap ? 'break-words' : 'truncate'}`}>
-                            {field.product_field_groups?.name || '-'}
+                            {field.field_group?.name || '-'}
                           </span>
                         )}
                         {colKey === 'fieldName' && (

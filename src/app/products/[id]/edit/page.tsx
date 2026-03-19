@@ -219,8 +219,8 @@ export default function EditProductPage() {
           .filter((field: any) => field.enabled !== false)
           .sort((a: any, b: any) => {
             // 先按分组的 sort_order 排序
-            const aGroupSortOrder = a.product_field_groups?.sort_order ?? 999999
-            const bGroupSortOrder = b.product_field_groups?.sort_order ?? 999999
+            const aGroupSortOrder = a.field_group?.sort_order ?? 999999
+            const bGroupSortOrder = b.field_group?.sort_order ?? 999999
             if (aGroupSortOrder !== bGroupSortOrder) {
               return aGroupSortOrder - bGroupSortOrder
             }

@@ -20,7 +20,7 @@ public class ProductBasicField {
     @Column(name = "field_name", nullable = false)
     private String fieldName;
     
-    @Column(name = "field_code", nullable = false, unique = true)
+    @Column(name = "db_field_name")
     private String fieldCode;
     
     @Column(name = "field_type", nullable = false)
