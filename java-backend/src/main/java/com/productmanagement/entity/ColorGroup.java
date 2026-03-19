@@ -4,18 +4,16 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Data
 @Entity
-@Table(name = "product_attribute_values")
-public class ProductAttributeValue {
+@Table(name = "color_groups")
+public class ColorGroup {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    
-    @Column(name = "attribute_id", nullable = false)
-    private Integer attributeId;
     
     @Column(name = "name", nullable = false)
     private String name;
@@ -23,8 +21,14 @@ public class ProductAttributeValue {
     @Column(name = "code", nullable = false)
     private String code;
     
-    @Column(name = "parent_id")
-    private Integer parentId;
+    @Column(name = "group_code")
+    private String groupCode;
+    
+    @Column(name = "code_length")
+    private Integer codeLength = 2;
+    
+    @Column(name = "color")
+    private String color = "#3B82F6";
     
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
@@ -35,13 +39,14 @@ public class ProductAttributeValue {
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "attribute_id", insertable = false, updatable = false)
-    private ProductAttribute attribute;
+    @OneToMany(mappedBy = "groupId", fetch = FetchType.LAZY)
+    private List<ColorValue> colorValues;
     
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();
+        if (codeLength == null) codeLength = 2;
+        if (color == null) color = "#3B82F6";
         if (sortOrder == null) sortOrder = 0;
     }
     

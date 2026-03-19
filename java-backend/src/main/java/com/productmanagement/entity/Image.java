@@ -7,27 +7,30 @@ import java.time.OffsetDateTime;
 
 @Data
 @Entity
-@Table(name = "product_attribute_values")
-public class ProductAttributeValue {
+@Table(name = "images")
+public class Image {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     
-    @Column(name = "attribute_id", nullable = false)
-    private Integer attributeId;
-    
     @Column(name = "name", nullable = false)
     private String name;
     
-    @Column(name = "code", nullable = false)
-    private String code;
+    @Column(name = "url", nullable = false, columnDefinition = "TEXT")
+    private String url;
     
-    @Column(name = "parent_id")
-    private Integer parentId;
+    @Column(name = "category_id")
+    private Integer categoryId;
     
-    @Column(name = "sort_order")
-    private Integer sortOrder = 0;
+    @Column(name = "file_size")
+    private Integer fileSize;
+    
+    @Column(name = "width")
+    private Integer width;
+    
+    @Column(name = "height")
+    private Integer height;
     
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
@@ -36,13 +39,12 @@ public class ProductAttributeValue {
     private OffsetDateTime updatedAt;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "attribute_id", insertable = false, updatable = false)
-    private ProductAttribute attribute;
+    @JoinColumn(name = "category_id", insertable = false, updatable = false)
+    private ImageCategory category;
     
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();
-        if (sortOrder == null) sortOrder = 0;
     }
     
     @PreUpdate

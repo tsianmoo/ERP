@@ -7,15 +7,15 @@ import java.time.OffsetDateTime;
 
 @Data
 @Entity
-@Table(name = "product_attribute_values")
-public class ProductAttributeValue {
+@Table(name = "color_values")
+public class ColorValue {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     
-    @Column(name = "attribute_id", nullable = false)
-    private Integer attributeId;
+    @Column(name = "group_id", nullable = false)
+    private Integer groupId;
     
     @Column(name = "name", nullable = false)
     private String name;
@@ -23,8 +23,11 @@ public class ProductAttributeValue {
     @Column(name = "code", nullable = false)
     private String code;
     
-    @Column(name = "parent_id")
-    private Integer parentId;
+    @Column(name = "hex_code")
+    private String hexCode;
+    
+    @Column(name = "transparency")
+    private Integer transparency;
     
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
@@ -36,8 +39,8 @@ public class ProductAttributeValue {
     private OffsetDateTime updatedAt;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "attribute_id", insertable = false, updatable = false)
-    private ProductAttribute attribute;
+    @JoinColumn(name = "group_id", insertable = false, updatable = false)
+    private ColorGroup group;
     
     @PrePersist
     protected void onCreate() {

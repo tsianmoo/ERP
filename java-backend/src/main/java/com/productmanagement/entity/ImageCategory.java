@@ -7,24 +7,21 @@ import java.time.OffsetDateTime;
 
 @Data
 @Entity
-@Table(name = "product_attribute_values")
-public class ProductAttributeValue {
+@Table(name = "image_categories")
+public class ImageCategory {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     
-    @Column(name = "attribute_id", nullable = false)
-    private Integer attributeId;
-    
     @Column(name = "name", nullable = false)
     private String name;
     
-    @Column(name = "code", nullable = false)
-    private String code;
+    @Column(name = "type")
+    private String type = "manual";
     
-    @Column(name = "parent_id")
-    private Integer parentId;
+    @Column(name = "attribute_code")
+    private String attributeCode;
     
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
@@ -35,13 +32,10 @@ public class ProductAttributeValue {
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "attribute_id", insertable = false, updatable = false)
-    private ProductAttribute attribute;
-    
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();
+        if (type == null) type = "manual";
         if (sortOrder == null) sortOrder = 0;
     }
     

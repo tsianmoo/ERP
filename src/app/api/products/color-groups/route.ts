@@ -1,24 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { colorGroupsApi } from '@/lib/java-backend-client';
 
 // GET /api/products/color-groups - 获取所有颜色组
 export async function GET() {
   try {
-    const client = getSupabaseClient();
-    const { data, error } = await client
-      .from('color_groups')
-      .select('*, color_values(*)')
-      .order('sort_order', { ascending: true });
+    const result = await colorGroupsApi.list();
 
-    if (error) {
+    if (result.error) {
       return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
+        { error: result.error },
+        { status: result.status }
       );
     }
 
-    return NextResponse.json({ data: data || [] });
+    return NextResponse.json(result.data);
   } catch (error) {
+    console.error('获取颜色分组列表失败:', error);
     return NextResponse.json(
       { error: '服务器错误' },
       { status: 500 }
@@ -29,30 +26,29 @@ export async function GET() {
 // POST /api/products/color-groups - 创建颜色组
 export async function POST(request: NextRequest) {
   try {
-    const client = getSupabaseClient();
     const body = await request.json();
 
-    const { data, error } = await client
-      .from('color_groups')
-      .insert({
-        name: body.name,
-        code: body.code,
-        code_length: body.codeLength || 2,
-        color: body.color || '#3B82F6',
-        sort_order: 0,
-      })
-      .select()
-      .single();
+    const javaRequest = {
+      name: body.name,
+      code: body.code,
+      codeLength: body.codeLength || 2,
+      color: body.color || '#3B82F6',
+      groupCode: body.groupCode,
+      sortOrder: 0,
+    };
 
-    if (error) {
+    const result = await colorGroupsApi.create(javaRequest);
+
+    if (result.error) {
       return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
+        { error: result.error },
+        { status: result.status }
       );
     }
 
-    return NextResponse.json({ data }, { status: 201 });
+    return NextResponse.json(result.data, { status: 201 });
   } catch (error) {
+    console.error('创建颜色分组失败:', error);
     return NextResponse.json(
       { error: '服务器错误' },
       { status: 500 }
