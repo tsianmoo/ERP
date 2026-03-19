@@ -691,22 +691,21 @@ export default function ProductsPage() {
                     className="m-0"
                   />
                 </div>
-                {/* 动态列 - 使用 flex 自适应宽度 */}
+                {/* 动态列 - 与商品属性页面完全一致的样式 */}
                 {columnConfigs
                   .filter(c => c.visible && c.id !== 'actions')
                   .sort((a, b) => a.sortOrder - b.sortOrder)
                   .map((column) => {
-                    // 使用 flex 自适应宽度
-                    const flex = column.flex || 1
-                    const cellStyle: React.CSSProperties = { 
-                      flex: `${flex} ${flex} auto`,
-                      minWidth: '50px'
-                    }
+                    // 与商品属性页面完全一致的样式计算
+                    // flex 为 0 表示固定宽度，否则使用 flex 比例 + 最小宽度
+                    const cellStyle: React.CSSProperties = column.flex === 0 && column.width
+                      ? { width: `${column.width}px`, flexShrink: 0 }
+                      : { flex: column.flex || 1, minWidth: '60px' }
                     
                     return (
                       <div
                         key={column.id}
-                        className="flex items-center justify-center px-2 text-xs font-medium text-gray-500 whitespace-nowrap"
+                        className="flex items-center justify-center px-3 text-xs font-medium text-gray-500 whitespace-nowrap"
                         style={cellStyle}
                       >
                         {column.name}
@@ -743,17 +742,16 @@ export default function ProductsPage() {
                           className="m-0"
                         />
                       </div>
-                      {/* 动态列单元格 - 使用 flex 自适应宽度 */}
+                      {/* 动态列单元格 - 与商品属性页面完全一致的样式 */}
                       {columnConfigs
                         .filter(c => c.visible && c.id !== 'actions')
                         .sort((a, b) => a.sortOrder - b.sortOrder)
                         .map((column) => {
-                          // 使用 flex 自适应宽度
-                          const flex = column.flex || 1
-                          const cellStyle: React.CSSProperties = { 
-                            flex: `${flex} ${flex} auto`,
-                            minWidth: '50px'
-                          }
+                          // 与商品属性页面完全一致的样式计算
+                          // flex 为 0 表示固定宽度，否则使用 flex 比例 + 最小宽度
+                          const cellStyle: React.CSSProperties = column.flex === 0 && column.width
+                            ? { width: `${column.width}px`, flexShrink: 0 }
+                            : { flex: column.flex || 1, minWidth: '60px' }
                           
                           let content: React.ReactNode = '-'
 
