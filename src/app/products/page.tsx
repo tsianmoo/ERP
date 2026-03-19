@@ -654,7 +654,7 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Product Table - 自适应列宽布局 */}
+      {/* Product Table - 使用 table 布局确保列对齐 */}
       <div 
         className="bg-white overflow-hidden w-full"
         style={{ 
@@ -664,67 +664,62 @@ export default function ProductsPage() {
           borderStyle: 'solid'
         }}
       >
-        {/* 表格内容 - 操作列固定布局 */}
-        <div className="border border-gray-200 rounded-lg flex">
-          {/* 左侧滚动区域 */}
-          <div className="flex-1 overflow-x-auto">
-            <div className="flex flex-col" style={{ minWidth: 'max-content' }}>
-              {/* 表头 */}
-              <div className="flex bg-gray-50 border-b border-gray-200 text-xs font-medium h-10">
-                {/* 复选框列 */}
-                <div 
-                  className="flex items-center justify-center pl-4 pr-2"
-                  style={{ width: '36px', flexShrink: 0 }}
-                >
-                  <Checkbox
-                    checked={filteredProducts.length > 0 && filteredProducts.every(p => selectedProductIds.has(p.id))}
-                    ref={(ref) => {
-                      if (ref) {
-                        const allSelected = filteredProducts.length > 0 && filteredProducts.every(p => selectedProductIds.has(p.id))
-                        const someSelected = filteredProducts.some(p => selectedProductIds.has(p.id))
-                        ;(ref as HTMLButtonElement).dataset.state = someSelected && !allSelected ? 'indeterminate' : allSelected ? 'checked' : 'unchecked'
-                      }
-                    }}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedProductIds(new Set(filteredProducts.map(p => p.id)))
-                      } else {
-                        setSelectedProductIds(new Set())
-                      }
-                    }}
-                    className="m-0"
-                  />
-                </div>
-                {/* 动态列 - 自适应宽度 */}
-                {columnConfigs
-                  .filter(c => c.visible && c.id !== 'actions')
-                  .sort((a, b) => a.sortOrder - b.sortOrder)
-                  .map((column) => {
-                    return (
-                      <div
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse" style={{ minWidth: 'max-content' }}>
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200 h-10">
+                  {/* 复选框列 */}
+                  <th className="w-9 min-w-9 px-2 text-center">
+                    <Checkbox
+                      checked={filteredProducts.length > 0 && filteredProducts.every(p => selectedProductIds.has(p.id))}
+                      ref={(ref) => {
+                        if (ref) {
+                          const allSelected = filteredProducts.length > 0 && filteredProducts.every(p => selectedProductIds.has(p.id))
+                          const someSelected = filteredProducts.some(p => selectedProductIds.has(p.id))
+                          ;(ref as HTMLButtonElement).dataset.state = someSelected && !allSelected ? 'indeterminate' : allSelected ? 'checked' : 'unchecked'
+                        }
+                      }}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedProductIds(new Set(filteredProducts.map(p => p.id)))
+                        } else {
+                          setSelectedProductIds(new Set())
+                        }
+                      }}
+                      className="m-0"
+                    />
+                  </th>
+                  {/* 动态列 */}
+                  {columnConfigs
+                    .filter(c => c.visible && c.id !== 'actions')
+                    .sort((a, b) => a.sortOrder - b.sortOrder)
+                    .map((column) => (
+                      <th
                         key={column.id}
-                        className="flex items-center justify-center px-3 text-xs font-medium text-gray-500 whitespace-nowrap flex-shrink-0"
+                        className="px-3 text-xs font-medium text-gray-500 whitespace-nowrap text-center"
                       >
                         {column.name}
-                      </div>
-                    )
-                  })}
-              </div>
-              
-              {/* 数据行 */}
-              {filteredProducts.length === 0 ? (
-                <div className="p-12 text-center text-gray-500">
-                  暂无商品数据
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-100">
-                  {filteredProducts.map((product, index) => (
-                    <div key={product.id} className="group flex items-center hover:bg-gray-50 transition-colors h-11">
-                      {/* 复选框单元格 */}
-                      <div 
-                        className="flex items-center justify-center pl-4 pr-2"
-                        style={{ width: '36px', flexShrink: 0 }}
-                      >
+                      </th>
+                    ))}
+                  {/* 操作列 */}
+                  <th className="px-3 text-xs font-medium text-gray-500 whitespace-nowrap text-center w-44 min-w-44">
+                    操作
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredProducts.length === 0 ? (
+                  <tr>
+                    <td colSpan={columnConfigs.filter(c => c.visible).length + 2} className="p-12 text-center text-gray-500">
+                      暂无商品数据
+                    </td>
+                  </tr>
+                ) : (
+                  filteredProducts.map((product, index) => (
+                    <tr key={product.id} className="hover:bg-gray-50 transition-colors h-11">
+                      {/* 复选框 */}
+                      <td className="w-9 min-w-9 px-2 text-center">
                         <Checkbox
                           checked={selectedProductIds.has(product.id)}
                           onCheckedChange={(checked) => {
@@ -738,8 +733,8 @@ export default function ProductsPage() {
                           }}
                           className="m-0"
                         />
-                      </div>
-                      {/* 动态列单元格 - 自适应宽度 */}
+                      </td>
+                      {/* 动态列 */}
                       {columnConfigs
                         .filter(c => c.visible && c.id !== 'actions')
                         .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -784,68 +779,51 @@ export default function ProductsPage() {
                           }
 
                           return (
-                            <div
-                              key={column.id}
-                              className="flex items-center justify-center px-3 flex-shrink-0"
-                            >
+                            <td key={column.id} className="px-3 text-center whitespace-nowrap">
                               {content}
-                            </div>
+                            </td>
                           )
                         })}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* 右侧固定操作列 */}
-          <div className="flex flex-col border-l border-gray-200 bg-white flex-shrink-0" style={{ width: '180px' }}>
-            {/* 操作列表头 */}
-            <div className="flex items-center justify-center bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 h-10 whitespace-nowrap">
-              操作
-            </div>
-            {/* 操作列数据 */}
-            {filteredProducts.length > 0 && (
-              <div className="divide-y divide-gray-100">
-                {filteredProducts.map((product) => (
-                  <div key={product.id} className="group flex items-center hover:bg-gray-50 transition-colors h-11">
-                    <div className="flex items-center gap-1 px-2 w-full justify-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                        onClick={() => router.push(`/products/${product.id}/view`)}
-                      >
-                        <Eye className="h-3.5 w-3.5 mr-1" />
-                        查看
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                        onClick={() => router.push(`/products/${product.id}/edit`)}
-                      >
-                        <Edit className="h-3.5 w-3.5 mr-1" />
-                        编辑
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-xs text-gray-600 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => {
-                          setProductToDelete(product.id)
-                          setIsDeleteDialogOpen(true)
-                        }}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 mr-1" />
-                        删除
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                      {/* 操作列 */}
+                      <td className="px-2 text-center whitespace-nowrap">
+                        <div className="flex items-center gap-1 justify-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                            onClick={() => router.push(`/products/${product.id}/view`)}
+                          >
+                            <Eye className="h-3.5 w-3.5 mr-1" />
+                            查看
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                            onClick={() => router.push(`/products/${product.id}/edit`)}
+                          >
+                            <Edit className="h-3.5 w-3.5 mr-1" />
+                            编辑
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs text-gray-600 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => {
+                              setProductToDelete(product.id)
+                              setIsDeleteDialogOpen(true)
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-1" />
+                            删除
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
