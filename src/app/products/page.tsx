@@ -654,7 +654,7 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Product Table - flex 布局（与商品属性页面完全一致） */}
+      {/* Product Table - 自适应列宽布局 */}
       <div 
         className="bg-white overflow-hidden w-full"
         style={{ 
@@ -668,7 +668,7 @@ export default function ProductsPage() {
         <div className="border border-gray-200 rounded-lg flex">
           {/* 左侧滚动区域 */}
           <div className="flex-1 overflow-x-auto">
-            <div className="flex flex-col min-w-full">
+            <div className="flex flex-col" style={{ minWidth: 'max-content' }}>
               {/* 表头 */}
               <div className="flex bg-gray-50 border-b border-gray-200 text-xs font-medium h-10">
                 {/* 复选框列 */}
@@ -695,24 +695,15 @@ export default function ProductsPage() {
                     className="m-0"
                   />
                 </div>
-                {/* 动态列 - 使用固定宽度，防止重叠 */}
+                {/* 动态列 - 自适应宽度 */}
                 {columnConfigs
                   .filter(c => c.visible && c.id !== 'actions')
                   .sort((a, b) => a.sortOrder - b.sortOrder)
                   .map((column) => {
-                    // 使用固定宽度
-                    const width = column.width || 100
-                    const cellStyle: React.CSSProperties = { 
-                      width: `${width}px`, 
-                      flexShrink: 0,
-                      minWidth: `${width}px`
-                    }
-                    
                     return (
                       <div
                         key={column.id}
-                        className="flex items-center justify-center px-2 text-xs font-medium text-gray-500 whitespace-nowrap"
-                        style={cellStyle}
+                        className="flex items-center justify-center px-3 text-xs font-medium text-gray-500 whitespace-nowrap flex-shrink-0"
                       >
                         {column.name}
                       </div>
@@ -748,19 +739,11 @@ export default function ProductsPage() {
                           className="m-0"
                         />
                       </div>
-                      {/* 动态列单元格 - 使用固定宽度，防止重叠 */}
+                      {/* 动态列单元格 - 自适应宽度 */}
                       {columnConfigs
                         .filter(c => c.visible && c.id !== 'actions')
                         .sort((a, b) => a.sortOrder - b.sortOrder)
                         .map((column) => {
-                          // 使用固定宽度
-                          const width = column.width || 100
-                          const cellStyle: React.CSSProperties = { 
-                            width: `${width}px`, 
-                            flexShrink: 0,
-                            minWidth: `${width}px`
-                          }
-                          
                           let content: React.ReactNode = '-'
 
                           switch (column.id) {
@@ -803,8 +786,7 @@ export default function ProductsPage() {
                           return (
                             <div
                               key={column.id}
-                              className="flex items-center justify-center px-3"
-                              style={cellStyle}
+                              className="flex items-center justify-center px-3 flex-shrink-0"
                             >
                               {content}
                             </div>
@@ -818,7 +800,7 @@ export default function ProductsPage() {
           </div>
           
           {/* 右侧固定操作列 */}
-          <div className="flex flex-col border-l border-gray-200 bg-white" style={{ minWidth: '180px', flexShrink: 0 }}>
+          <div className="flex flex-col border-l border-gray-200 bg-white flex-shrink-0" style={{ width: '180px' }}>
             {/* 操作列表头 */}
             <div className="flex items-center justify-center bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 h-10 whitespace-nowrap">
               操作
