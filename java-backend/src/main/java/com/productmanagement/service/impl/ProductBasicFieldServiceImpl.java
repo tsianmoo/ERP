@@ -82,15 +82,15 @@ public class ProductBasicFieldServiceImpl implements ProductBasicFieldService {
     @Override
     @Transactional
     public ProductBasicFieldDTO createField(ProductBasicFieldDTO request) {
-        // 如果没有提供 db_field_name，则自动生成
-        String dbFieldName = request.getDbFieldName();
-        if (dbFieldName == null || dbFieldName.isEmpty()) {
-            dbFieldName = generateDbFieldName(request.getFieldName());
+        // 如果没有提供 field_code，则自动生成
+        String fieldCode = request.getFieldCode();
+        if (fieldCode == null || fieldCode.isEmpty()) {
+            fieldCode = generateFieldCode(request.getFieldName());
         }
         
         ProductBasicField field = new ProductBasicField();
         field.setFieldName(request.getFieldName());
-        field.setDbFieldName(dbFieldName);
+        field.setFieldCode(fieldCode);
         field.setFieldType(request.getFieldType());
         field.setIsRequired(request.getIsRequired() != null ? request.getIsRequired() : false);
         field.setOptions(request.getOptions());
@@ -121,8 +121,8 @@ public class ProductBasicFieldServiceImpl implements ProductBasicFieldService {
         if (request.getFieldName() != null) {
             field.setFieldName(request.getFieldName());
         }
-        if (request.getDbFieldName() != null) {
-            field.setDbFieldName(request.getDbFieldName());
+        if (request.getFieldCode() != null) {
+            field.setFieldCode(request.getFieldCode());
         }
         if (request.getFieldType() != null) {
             field.setFieldType(request.getFieldType());
@@ -185,7 +185,7 @@ public class ProductBasicFieldServiceImpl implements ProductBasicFieldService {
         log.info("删除字段成功，ID: {}", id);
     }
     
-    private String generateDbFieldName(String fieldName) {
+    private String generateFieldCode(String fieldName) {
         if (fieldName == null || fieldName.isEmpty()) {
             return "custom_field";
         }
@@ -242,7 +242,7 @@ public class ProductBasicFieldServiceImpl implements ProductBasicFieldService {
         return ProductBasicFieldDTO.builder()
                 .id(field.getId())
                 .fieldName(field.getFieldName())
-                .dbFieldName(field.getDbFieldName())
+                .fieldCode(field.getFieldCode())
                 .fieldType(field.getFieldType())
                 .isRequired(field.getIsRequired())
                 .options(field.getOptions())

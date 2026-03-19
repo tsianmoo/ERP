@@ -471,10 +471,10 @@ export default function EditProductPage() {
 
     basicFields.forEach((field: any) => {
       if (field.required) {
-        const value = basicFieldValues[field.db_field_name]
+        const value = basicFieldValues[field.field_code]
         const error = validateField(field, value)
         if (error) {
-          errors[field.db_field_name] = error
+          errors[field.field_code] = error
           isValid = false
         }
       }
@@ -486,13 +486,13 @@ export default function EditProductPage() {
 
   // 处理字段值变化
   const handleFieldChange = (field: any, value: any) => {
-    setBasicFieldValues(prev => ({ ...prev, [field.db_field_name]: value }))
+    setBasicFieldValues(prev => ({ ...prev, [field.field_code]: value }))
 
     // 清除该字段的错误
-    if (fieldErrors[field.db_field_name]) {
+    if (fieldErrors[field.field_code]) {
       setFieldErrors(prev => {
         const newErrors = { ...prev }
-        delete newErrors[field.db_field_name]
+        delete newErrors[field.field_code]
         return newErrors
       })
     }
@@ -500,14 +500,14 @@ export default function EditProductPage() {
 
   // 处理字段失去焦点
   const handleFieldBlur = (field: any) => {
-    const value = basicFieldValues[field.db_field_name]
+    const value = basicFieldValues[field.field_code]
     const error = validateField(field, value)
     if (error) {
-      setFieldErrors(prev => ({ ...prev, [field.db_field_name]: error }))
+      setFieldErrors(prev => ({ ...prev, [field.field_code]: error }))
     } else {
       setFieldErrors(prev => {
         const newErrors = { ...prev }
-        delete newErrors[field.db_field_name]
+        delete newErrors[field.field_code]
         return newErrors
       })
     }
@@ -567,8 +567,8 @@ export default function EditProductPage() {
   // 渲染基本信息字段
   const renderBasicField = (field: any) => {
     const isAutoGenerate = field.auto_generate === true && field.code_rule_id;
-    const hasError = !!fieldErrors[field.db_field_name]
-    const errorMessage = fieldErrors[field.db_field_name]
+    const hasError = !!fieldErrors[field.field_code]
+    const errorMessage = fieldErrors[field.field_code]
 
     switch (field.field_type) {
       case 'text':
@@ -576,7 +576,7 @@ export default function EditProductPage() {
           <div className="space-y-2">
             <div className="relative">
               <Input
-                value={(basicFieldValues[field.db_field_name] ?? '')}
+                value={(basicFieldValues[field.field_code] ?? '')}
                 readOnly={isAutoGenerate}
                 onChange={(e) => handleFieldChange(field, e.target.value)}
                 onBlur={() => handleFieldBlur(field)}
@@ -597,7 +597,7 @@ export default function EditProductPage() {
           <div className="space-y-2">
             <div className="relative">
               <Textarea
-                value={(basicFieldValues[field.db_field_name] ?? '')}
+                value={(basicFieldValues[field.field_code] ?? '')}
                 readOnly={isAutoGenerate}
                 onChange={(e) => handleFieldChange(field, e.target.value)}
                 onBlur={() => handleFieldBlur(field)}
@@ -619,7 +619,7 @@ export default function EditProductPage() {
             <div className="relative">
               <Input
                 type="number"
-                value={basicFieldValues[field.db_field_name] ?? ''}
+                value={basicFieldValues[field.field_code] ?? ''}
                 readOnly={isAutoGenerate}
                 onChange={(e) => {
                   if (isAutoGenerate) return;
@@ -642,9 +642,9 @@ export default function EditProductPage() {
         )
       case 'select':
         // 特殊处理供应商字段：尝试从多个字段名获取值
-        let selectValue = basicFieldValues[field.db_field_name] ?? ''
+        let selectValue = basicFieldValues[field.field_code] ?? ''
         if ((selectValue === '' || selectValue === null || selectValue === undefined) && 
-            (field.db_field_name === 'supplier' || field.db_field_name === 'supplier_id')) {
+            (field.field_code === 'supplier' || field.field_code === 'supplier_id')) {
           selectValue = basicFieldValues.supplier_id || basicFieldValues.supplier || ''
         }
         
@@ -682,7 +682,7 @@ export default function EditProductPage() {
             <div className="relative">
               <Input
                 type="date"
-                value={(basicFieldValues[field.db_field_name] ?? '')}
+                value={(basicFieldValues[field.field_code] ?? '')}
                 readOnly={isAutoGenerate}
                 onChange={(e) => handleFieldChange(field, e.target.value)}
                 onBlur={() => handleFieldBlur(field)}
@@ -700,7 +700,7 @@ export default function EditProductPage() {
       case 'boolean':
         return (
           <Checkbox
-            checked={basicFieldValues[field.db_field_name] || false}
+            checked={basicFieldValues[field.field_code] || false}
             onCheckedChange={(checked) => handleFieldChange(field, checked)}
           />
         )

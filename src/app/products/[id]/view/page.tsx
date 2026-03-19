@@ -315,7 +315,7 @@ export default function ViewProductPage() {
 
   // 渲染基本信息字段（只读）
   const renderBasicField = (field: any) => {
-    const value = basicFieldValues[field.db_field_name]
+    const value = basicFieldValues[field.field_code]
 
     switch (field.field_type) {
       case 'text':

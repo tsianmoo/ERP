@@ -15,7 +15,7 @@ public class ProductBasicFieldDTO {
     
     private Integer id;
     private String fieldName;
-    private String dbFieldName;
+    private String fieldCode;
     private String fieldType;
     private Boolean isRequired;
     private Object options;

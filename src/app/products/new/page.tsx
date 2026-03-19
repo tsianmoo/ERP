@@ -397,10 +397,10 @@ export default function AddProductPage() {
 
     basicFields.forEach((field: any) => {
       if (field.required) {
-        const value = basicFieldValues[field.db_field_name]
+        const value = basicFieldValues[field.field_code]
         const error = validateField(field, value)
         if (error) {
-          errors[field.db_field_name] = error
+          errors[field.field_code] = error
           isValid = false
         }
       }
@@ -412,13 +412,13 @@ export default function AddProductPage() {
 
   // 处理字段值变化
   const handleFieldChange = (field: any, value: any) => {
-    setBasicFieldValues(prev => ({ ...prev, [field.db_field_name]: value }))
+    setBasicFieldValues(prev => ({ ...prev, [field.field_code]: value }))
 
     // 清除该字段的错误
-    if (fieldErrors[field.db_field_name]) {
+    if (fieldErrors[field.field_code]) {
       setFieldErrors(prev => {
         const newErrors = { ...prev }
-        delete newErrors[field.db_field_name]
+        delete newErrors[field.field_code]
         return newErrors
       })
     }
@@ -426,14 +426,14 @@ export default function AddProductPage() {
 
   // 处理字段失去焦点
   const handleFieldBlur = (field: any) => {
-    const value = basicFieldValues[field.db_field_name]
+    const value = basicFieldValues[field.field_code]
     const error = validateField(field, value)
     if (error) {
-      setFieldErrors(prev => ({ ...prev, [field.db_field_name]: error }))
+      setFieldErrors(prev => ({ ...prev, [field.field_code]: error }))
     } else {
       setFieldErrors(prev => {
         const newErrors = { ...prev }
-        delete newErrors[field.db_field_name]
+        delete newErrors[field.field_code]
         return newErrors
       })
     }
@@ -458,7 +458,7 @@ export default function AddProductPage() {
 
       for (const field of autoGenerateFields) {
         // 如果字段已经有值，跳过（避免覆盖用户手动输入）
-        if (currentBasicFieldValues && currentBasicFieldValues[field.db_field_name]) {
+        if (currentBasicFieldValues && currentBasicFieldValues[field.field_code]) {
           continue
         }
 
@@ -502,7 +502,7 @@ export default function AddProductPage() {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                dbFieldName: field.db_field_name,
+                fieldCode: field.field_code,
                 codeRuleId: field.code_rule_id,
                 basicFieldValues: currentBasicFieldValues,
                 attributeValues: currentAttributeValues,
@@ -513,7 +513,7 @@ export default function AddProductPage() {
             if (result.success && result.data?.value) {
               setBasicFieldValues(prev => ({
                 ...prev,
-                [field.db_field_name]: result.data.value,
+                [field.field_code]: result.data.value,
               }))
             }
           }
@@ -613,7 +613,7 @@ export default function AddProductPage() {
     // 启用所有字段的自动生成开关
     const newFieldAutoGenerate: Record<string, boolean> = {}
     autoGenerateFields.forEach((field: any) => {
-      newFieldAutoGenerate[field.db_field_name] = true
+      newFieldAutoGenerate[field.field_code] = true
     })
     setFieldAutoGenerate({
       ...fieldAutoGenerate,
@@ -626,7 +626,7 @@ export default function AddProductPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          dbFieldName: field.db_field_name,
+          fieldCode: field.field_code,
           codeRuleId: field.code_rule_id,
           basicFieldValues,
           attributeValues,
@@ -804,19 +804,19 @@ export default function AddProductPage() {
   const renderBasicField = (field: any) => {
     // 使用更安全的类型检查
     const isAutoGenerateEnabled = Boolean(field.auto_generate) && Boolean(field.code_rule_id)
-    const autoGenerateState = fieldAutoGenerate[field.db_field_name] ?? isAutoGenerateEnabled
-    const hasError = !!fieldErrors[field.db_field_name]
-    const errorMessage = fieldErrors[field.db_field_name]
+    const autoGenerateState = fieldAutoGenerate[field.field_code] ?? isAutoGenerateEnabled
+    const hasError = !!fieldErrors[field.field_code]
+    const errorMessage = fieldErrors[field.field_code]
 
     // 自动生成字段的生成函数
-    const generateFieldValue = async (dbFieldName: string, codeRuleId: number) => {
+    const generateFieldValue = async (fieldCode: string, codeRuleId: number) => {
       try {
         // 获取最新的值
         const response = await fetch('/api/products/generate-field-value', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            dbFieldName,
+            fieldCode,
             codeRuleId,
             basicFieldValues,
             attributeValues,
@@ -826,7 +826,7 @@ export default function AddProductPage() {
         if (result.success) {
           setBasicFieldValues(prev => ({
             ...prev,
-            [field.db_field_name]: result.data.value,
+            [field.field_code]: result.data.value,
           }))
           toast({
             title: '生成成功',
@@ -857,11 +857,11 @@ export default function AddProductPage() {
                     onCheckedChange={(checked) => {
                       setFieldAutoGenerate({
                         ...fieldAutoGenerate,
-                        [field.db_field_name]: checked,
+                        [field.field_code]: checked,
                       })
                       // 如果开启自动生成，立即生成一次
                       if (checked && field.code_rule_id) {
-                        generateFieldValue(field.db_field_name, field.code_rule_id)
+                        generateFieldValue(field.field_code, field.code_rule_id)
                       }
                     }}
                     className="scale-75"
@@ -881,14 +881,14 @@ export default function AddProductPage() {
               {/* 输入框 */}
               {autoGenerateState ? (
                 <Input
-                  value={(basicFieldValues[field.db_field_name] ?? '')}
+                  value={(basicFieldValues[field.field_code] ?? '')}
                   readOnly
                   className="h-7 text-xs bg-gray-50 cursor-not-allowed"
                   placeholder="自动生成中..."
                 />
               ) : (
                 <Input
-                  value={(basicFieldValues[field.db_field_name] ?? '')}
+                  value={(basicFieldValues[field.field_code] ?? '')}
                   onChange={(e) => handleFieldChange(field, e.target.value)}
                   onBlur={() => handleFieldBlur(field)}
                   placeholder={field.field_name}
@@ -904,7 +904,7 @@ export default function AddProductPage() {
         return (
           <div className="space-y-1">
             <Input
-              value={(basicFieldValues[field.db_field_name] ?? '')}
+              value={(basicFieldValues[field.field_code] ?? '')}
               onChange={(e) => handleFieldChange(field, e.target.value)}
               onBlur={() => handleFieldBlur(field)}
               placeholder={field.field_name}
@@ -917,7 +917,7 @@ export default function AddProductPage() {
         return (
           <div className="space-y-1">
             <Textarea
-              value={(basicFieldValues[field.db_field_name] ?? '')}
+              value={(basicFieldValues[field.field_code] ?? '')}
               onChange={(e) => handleFieldChange(field, e.target.value)}
               onBlur={() => handleFieldBlur(field)}
               placeholder={field.field_name}
@@ -931,7 +931,7 @@ export default function AddProductPage() {
           <div className="space-y-1">
             <Input
               type="number"
-              value={basicFieldValues[field.db_field_name] ?? ''}
+              value={basicFieldValues[field.field_code] ?? ''}
               onChange={(e) => {
                 const value = e.target.value;
                 // 如果用户清空输入框，传递空字符串；否则转换为数字
@@ -946,7 +946,7 @@ export default function AddProductPage() {
         )
       case 'select':
         // 如果是供应商字段，使用 suppliers 列表作为选项
-        const isSupplierField = field.db_field_name === 'supplier_id' || field.db_field_name === 'supplier'
+        const isSupplierField = field.field_code === 'supplier_id' || field.field_code === 'supplier'
         const selectOptions = isSupplierField 
           ? suppliers.map((s: any) => ({ value: s.id.toString(), label: `${s.supplier_name || s.name} (${s.supplier_code || s.code})` }))
           : field.options || []
@@ -954,7 +954,7 @@ export default function AddProductPage() {
         return (
           <div className="space-y-1">
             <Select
-              value={(basicFieldValues[field.db_field_name] ?? '').toString()}
+              value={(basicFieldValues[field.field_code] ?? '').toString()}
               onValueChange={(value) => handleFieldChange(field, value)}
             >
               <SelectTrigger className={`w-full h-7 text-xs ${hasError ? 'border-red-500' : ''}`}>
@@ -976,7 +976,7 @@ export default function AddProductPage() {
           <div className="space-y-1">
             <Input
               type="date"
-              value={(basicFieldValues[field.db_field_name] ?? '')}
+              value={(basicFieldValues[field.field_code] ?? '')}
               onChange={(e) => handleFieldChange(field, e.target.value)}
               onBlur={() => handleFieldBlur(field)}
               className={`h-7 text-xs ${hasError ? 'border-red-500' : ''}`}
@@ -987,7 +987,7 @@ export default function AddProductPage() {
       case 'boolean':
         return (
           <Checkbox
-            checked={basicFieldValues[field.db_field_name] || false}
+            checked={basicFieldValues[field.field_code] || false}
             onCheckedChange={(checked) => handleFieldChange(field, checked)}
             className="scale-90"
           />

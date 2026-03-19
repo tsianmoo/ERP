@@ -70,7 +70,7 @@ interface Attribute {
   id: number
   name: string
   code: string
-  db_field_name: string // 数据库字段名
+  field_code: string // 数据库字段名
   sort_order: number
   code_length: number
   enabled: boolean
@@ -436,7 +436,7 @@ const commonChineseMap: Record<string, string> = {
 }
 
 // 自动生成数据库字段名
-const generateDbFieldName = (fieldName: string): string => {
+const generateFieldCode = (fieldName: string): string => {
   if (!fieldName) return ''
   
   let result = fieldName.trim()
@@ -523,7 +523,7 @@ export default function AttributesPage() {
   const [managingAttribute, setManagingAttribute] = useState<Attribute | null>(null)
   const [formData, setFormData] = useState({
     name: '',
-    dbFieldName: '', // 数据库字段名
+    fieldCode: '', // 数据库字段名
     codeLength: 2,
     enabled: true,
     isRequired: false,
@@ -539,7 +539,7 @@ export default function AttributesPage() {
   })
   const [editFormData, setEditFormData] = useState({
     name: '',
-    dbFieldName: '', // 数据库字段名
+    fieldCode: '', // 数据库字段名
     codeLength: 2,
     enabled: true,
     // Layout configuration
@@ -736,7 +736,7 @@ export default function AttributesPage() {
       if (response.ok) {
         setIsDialogOpen(false)
         fetchAttributes()
-        setFormData({ name: '', dbFieldName: '', codeLength: 2, enabled: true, isRequired: false, group: '', width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0 })
+        setFormData({ name: '', fieldCode: '', codeLength: 2, enabled: true, isRequired: false, group: '', width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0 })
         toast({
           title: '添加成功',
           description: '属性分类已添加',
@@ -1144,7 +1144,7 @@ export default function AttributesPage() {
         setIsEditDialogOpen(false)
         fetchAttributes()
         setEditingAttribute(null)
-        setEditFormData({ name: '', dbFieldName: '', codeLength: 2, enabled: true, width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0, isRequired: false, group: '' })
+        setEditFormData({ name: '', fieldCode: '', codeLength: 2, enabled: true, width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0, isRequired: false, group: '' })
         toast({
           title: '更新成功',
           description: '属性分类已更新',
@@ -1542,7 +1542,7 @@ export default function AttributesPage() {
     setEditingAttribute(attribute)
     setEditFormData({
       name: attribute.name,
-      dbFieldName: attribute.db_field_name || '',
+      fieldCode: attribute.field_code || '',
       codeLength: attribute.code_length,
       enabled: attribute.enabled !== undefined ? attribute.enabled : true,
       // Layout configuration
@@ -2035,7 +2035,7 @@ export default function AttributesPage() {
         {/* 添加按钮 */}
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open)
-          if (!open) setFormData({ name: '', dbFieldName: '', codeLength: 2, enabled: true, isRequired: false, group: '', width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0 })
+          if (!open) setFormData({ name: '', fieldCode: '', codeLength: 2, enabled: true, isRequired: false, group: '', width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0 })
         }}>
           <DialogTrigger asChild>
             <Button variant="outline">
@@ -2063,8 +2063,8 @@ export default function AttributesPage() {
                         value={formData.name}
                         onChange={(e) => {
                           const newName = e.target.value
-                          const newDbFieldName = generateDbFieldName(newName)
-                          setFormData({ ...formData, name: newName, dbFieldName: newDbFieldName })
+                          const newFieldCode = generateFieldCode(newName)
+                          setFormData({ ...formData, name: newName, fieldCode: newFieldCode })
                         }}
                         placeholder="例如：品牌"
                         className="h-8 text-xs bg-white border-gray-200 w-full"
@@ -2072,11 +2072,11 @@ export default function AttributesPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="dbFieldName" className="text-xs text-gray-500 mb-1 block">数据库字段名</Label>
+                      <Label htmlFor="fieldCode" className="text-xs text-gray-500 mb-1 block">数据库字段名</Label>
                       <Input
-                        id="dbFieldName"
-                        value={formData.dbFieldName}
-                        onChange={(e) => setFormData({ ...formData, dbFieldName: e.target.value })}
+                        id="fieldCode"
+                        value={formData.fieldCode}
+                        onChange={(e) => setFormData({ ...formData, fieldCode: e.target.value })}
                         placeholder="自动生成"
                         className="h-8 text-xs bg-gray-100 border-gray-200 w-full text-gray-600"
                         readOnly
@@ -2401,7 +2401,7 @@ export default function AttributesPage() {
                           <span className={`text-sm font-medium text-gray-900 px-1 ${allowWrap ? 'break-words' : 'truncate'}`}>{attribute.name}</span>
                         )}
                         {colKey === 'code' && (
-                          <span className={`text-sm text-gray-600 font-mono px-1 ${allowWrap ? 'break-words' : 'truncate'}`}>{attribute.db_field_name || '-'}</span>
+                          <span className={`text-sm text-gray-600 font-mono px-1 ${allowWrap ? 'break-words' : 'truncate'}`}>{attribute.field_code || '-'}</span>
                         )}
                         {colKey === 'codeLength' && (
                           <span className="text-sm text-gray-600">{attribute.code_length} 位</span>
@@ -2642,7 +2642,7 @@ export default function AttributesPage() {
         setIsEditDialogOpen(open)
         if (!open) {
           setEditingAttribute(null)
-          setEditFormData({ name: '', dbFieldName: '', codeLength: 2, enabled: true, width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0, isRequired: false, group: '' })
+          setEditFormData({ name: '', fieldCode: '', codeLength: 2, enabled: true, width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0, isRequired: false, group: '' })
         }
       }}>
         <DialogContent className="sm:max-w-[560px] max-h-[80vh] overflow-hidden p-0">
@@ -2665,8 +2665,8 @@ export default function AttributesPage() {
                       value={editFormData.name}
                       onChange={(e) => {
                         const newName = e.target.value
-                        const newDbFieldName = generateDbFieldName(newName)
-                        setEditFormData({ ...editFormData, name: newName, dbFieldName: newDbFieldName })
+                        const newFieldCode = generateFieldCode(newName)
+                        setEditFormData({ ...editFormData, name: newName, fieldCode: newFieldCode })
                       }}
                       placeholder="例如：品牌"
                       className="h-8 text-xs bg-white border-gray-200 w-full"
@@ -2674,11 +2674,11 @@ export default function AttributesPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="editDbFieldName" className="text-xs text-gray-500 mb-1 block">数据库字段名</Label>
+                    <Label htmlFor="editFieldCode" className="text-xs text-gray-500 mb-1 block">数据库字段名</Label>
                     <Input
-                      id="editDbFieldName"
-                      value={editFormData.dbFieldName}
-                      onChange={(e) => setEditFormData({ ...editFormData, dbFieldName: e.target.value })}
+                      id="editFieldCode"
+                      value={editFormData.fieldCode}
+                      onChange={(e) => setEditFormData({ ...editFormData, fieldCode: e.target.value })}
                       placeholder="自动生成"
                       className="h-8 text-xs bg-gray-100 border-gray-200 w-full text-gray-600"
                       readOnly

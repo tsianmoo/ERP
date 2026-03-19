@@ -20,7 +20,7 @@ public interface ProductBasicFieldRepository extends JpaRepository<ProductBasicF
     @Query("SELECT f FROM ProductBasicField f LEFT JOIN FETCH f.fieldGroup ORDER BY f.groupId ASC NULLS LAST, f.sortOrder ASC")
     List<ProductBasicField> findAllWithGroupOrderBySortOrder();
     
-    Optional<ProductBasicField> findByDbFieldName(String dbFieldName);
+    Optional<ProductBasicField> findByFieldCode(String fieldCode);
     
-    boolean existsByDbFieldName(String dbFieldName);
+    boolean existsByFieldCode(String fieldCode);
 }

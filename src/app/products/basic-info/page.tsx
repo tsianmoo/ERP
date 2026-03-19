@@ -41,7 +41,7 @@ import { CSS } from '@dnd-kit/utilities'
 interface BasicField {
   id: number
   field_name: string
-  db_field_name: string  // 数据库字段名，用于标识货号等特殊字段
+  field_code: string  // 数据库字段名，用于标识货号等特殊字段
   field_type: string
   is_required: boolean
   options: any
@@ -277,7 +277,7 @@ export default function BasicInfoPage() {
   }
 
   // 自动生成数据库字段名
-  const generateDbFieldName = (fieldName: string): string => {
+  const generateFieldCode = (fieldName: string): string => {
     if (!fieldName) return ''
     
     let result = fieldName.trim()
@@ -331,7 +331,7 @@ export default function BasicInfoPage() {
   const [previewLoading, setPreviewLoading] = useState(false) // 预览加载状态
   const [formData, setFormData] = useState({
     fieldName: '',
-    dbFieldName: '', // 数据库字段名，用于标识货号等特殊字段
+    fieldCode: '', // 数据库字段名，用于标识货号等特殊字段
     fieldType: 'text',
     isRequired: false,
     options: '',
@@ -672,7 +672,7 @@ export default function BasicInfoPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             fieldName: field.field_name,
-            dbFieldName: field.db_field_name,
+            fieldCode: field.field_code,
             fieldType: field.field_type,
             sortOrder: index,
             enabled: field.enabled,
@@ -761,7 +761,7 @@ export default function BasicInfoPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          dbFieldName: formData.dbFieldName,
+          fieldCode: formData.fieldCode,
           codeRuleId: formData.codeRuleId,
           basicFieldValues: {}, // 预览时使用空值
           attributeValues: {}, // 预览时使用空值
@@ -1016,28 +1016,28 @@ export default function BasicInfoPage() {
       }
 
       // 生成唯一的 db_field_name
-      let finalDbFieldName = formData.dbFieldName
+      let finalFieldCode = formData.fieldCode
       
-      if (finalDbFieldName && !editingField) {
+      if (finalFieldCode && !editingField) {
         // 添加模式：检查是否已存在，如果存在则自动添加后缀
-        const existingDbField = fields.find(f => f.db_field_name === finalDbFieldName)
+        const existingDbField = fields.find(f => f.field_code === finalFieldCode)
         if (existingDbField) {
           // 自动生成唯一的字段名
           let counter = 1
-          while (fields.find(f => f.db_field_name === `${finalDbFieldName}_${counter}`)) {
+          while (fields.find(f => f.field_code === `${finalFieldCode}_${counter}`)) {
             counter++
           }
-          finalDbFieldName = `${finalDbFieldName}_${counter}`
-          console.log(`数据库字段名已存在，自动调整为: ${finalDbFieldName}`)
+          finalFieldCode = `${finalFieldCode}_${counter}`
+          console.log(`数据库字段名已存在，自动调整为: ${finalFieldCode}`)
         }
-      } else if (finalDbFieldName && editingField) {
+      } else if (finalFieldCode && editingField) {
         // 编辑模式：检查其他字段是否使用了相同的名称
-        const otherDbField = fields.find(f => f.db_field_name === finalDbFieldName && f.id !== editingField.id)
+        const otherDbField = fields.find(f => f.field_code === finalFieldCode && f.id !== editingField.id)
         if (otherDbField) {
           toast({
             variant: 'destructive',
             title: '数据库字段名已存在',
-            description: `数据库字段名 "${formData.dbFieldName}" 已被 "${otherDbField.field_name}" 使用，请修改字段名称`,
+            description: `数据库字段名 "${formData.fieldCode}" 已被 "${otherDbField.field_name}" 使用，请修改字段名称`,
           })
           setSubmitting(false)
           return
@@ -1065,7 +1065,7 @@ export default function BasicInfoPage() {
 
       const payload = {
         fieldName: formData.fieldName,
-        dbFieldName: finalDbFieldName,
+        fieldCode: finalFieldCode,
         fieldType: formData.fieldType,
         isRequired: formData.isRequired,
         options,
@@ -1228,7 +1228,7 @@ export default function BasicInfoPage() {
     
     setFormData({
       fieldName: field.field_name,
-      dbFieldName: field.db_field_name || '',
+      fieldCode: field.field_code || '',
       fieldType: field.field_type,
       isRequired: field.is_required,
       options: field.options
@@ -1277,7 +1277,7 @@ export default function BasicInfoPage() {
   const resetForm = () => {
     setFormData({
       fieldName: '',
-      dbFieldName: '',
+      fieldCode: '',
       fieldType: 'text',
       isRequired: false,
       options: '',
@@ -1342,7 +1342,7 @@ export default function BasicInfoPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fieldName: field.field_name,
-          dbFieldName: field.db_field_name,
+          fieldCode: field.field_code,
           fieldType: field.field_type,
           isRequired: !field.is_required,
           options: field.options,
@@ -1379,7 +1379,7 @@ export default function BasicInfoPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fieldName: field.field_name,
-          dbFieldName: field.db_field_name,
+          fieldCode: field.field_code,
           fieldType: field.field_type,
           isRequired: field.is_required,
           options: field.options,
@@ -1441,7 +1441,7 @@ export default function BasicInfoPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               fieldName: field.field_name,
-              dbFieldName: field.db_field_name,
+              fieldCode: field.field_code,
               fieldType: field.field_type,
               isRequired: field.is_required,
               options: field.options,
@@ -1505,7 +1505,7 @@ export default function BasicInfoPage() {
         const query = searchQuery.toLowerCase()
         return (
           field.field_name.toLowerCase().includes(query) ||
-          field.db_field_name.toLowerCase().includes(query)
+          field.field_code.toLowerCase().includes(query)
         )
       })
       .sort((a, b) => {
@@ -2119,7 +2119,7 @@ export default function BasicInfoPage() {
                           setFormData({ 
                             ...formData, 
                             fieldName: newFieldName,
-                            dbFieldName: generateDbFieldName(newFieldName)
+                            fieldCode: generateFieldCode(newFieldName)
                           })
                         }}
                         placeholder="例如：是否允许零售"
@@ -2128,10 +2128,10 @@ export default function BasicInfoPage() {
                       />
                     </div>
                     <div className="col-span-2">
-                      <Label htmlFor="dbFieldName" className="text-xs text-gray-500 mb-1 block">数据库字段名</Label>
+                      <Label htmlFor="fieldCode" className="text-xs text-gray-500 mb-1 block">数据库字段名</Label>
                       <Input
-                        id="dbFieldName"
-                        value={formData.dbFieldName}
+                        id="fieldCode"
+                        value={formData.fieldCode}
                         disabled
                         className="h-8 text-xs bg-gray-100 border-gray-200 text-gray-500 w-full"
                       />

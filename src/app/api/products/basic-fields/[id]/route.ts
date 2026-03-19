@@ -48,7 +48,7 @@ const commonChineseMap: Record<string, string> = {
 }
 
 // 自动生成数据库字段名
-function generateDbFieldName(fieldName: string): string {
+function generateFieldCode(fieldName: string): string {
   if (!fieldName) return 'custom_field'
   
   let result = fieldName.trim()
@@ -100,15 +100,15 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    // 如果没有提供 db_field_name，则自动生成
-    let dbFieldName = body.dbFieldName;
-    if (!dbFieldName && body.fieldName) {
-      dbFieldName = generateDbFieldName(body.fieldName);
+    // 如果没有提供 field_code，则自动生成
+    let fieldCode = body.fieldCode;
+    if (!fieldCode && body.fieldName) {
+      fieldCode = generateFieldCode(body.fieldName);
     }
 
     const updateData: any = {
       field_name: body.fieldName,
-      db_field_name: dbFieldName,
+      field_code: fieldCode,
       field_type: body.fieldType,
       is_required: body.isRequired,
       options: body.options,

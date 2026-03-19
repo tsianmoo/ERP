@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     const javaRequest = {
       fieldName: body.fieldName,
-      dbFieldName: body.dbFieldName,
+      fieldCode: body.fieldCode,
       fieldType: body.fieldType,
       isRequired: body.isRequired || false,
       options: body.options,

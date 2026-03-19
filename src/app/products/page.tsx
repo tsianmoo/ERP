@@ -66,7 +66,7 @@ interface FieldOption {
 interface BasicField {
   id: number
   field_name: string
-  db_field_name: string
+  field_code: string
   field_type: string
   sort_order: number
   enabled: boolean
@@ -224,7 +224,7 @@ export default function ProductsPage() {
     let sortOrder = 2
     basicFields.forEach((field) => {
       let defaultFlex = 1
-      if (field.db_field_name === 'product_name') {
+      if (field.field_code === 'product_name') {
         defaultFlex = 2
       }
       
@@ -300,7 +300,7 @@ export default function ProductsPage() {
       const configId = `basic_${field.id}`
       if (!existingIds.has(configId)) {
         let defaultFlex = 1
-        if (field.db_field_name === 'product_name') {
+        if (field.field_code === 'product_name') {
           defaultFlex = 2
         }
         
@@ -407,7 +407,7 @@ export default function ProductsPage() {
             return (a.sort_order || 0) - (b.sort_order || 0)
           })
         const filteredFields = enabledFields.filter(
-          (field: any) => field.db_field_name !== 'product_code'
+          (field: any) => field.field_code !== 'product_code'
         )
         setBasicFields(filteredFields)
       }
@@ -465,9 +465,9 @@ export default function ProductsPage() {
       if (!isNaN(index) && options[index]) return options[index]
     }
     
-    if (field.db_field_name === 'supplier_id' || 
-        field.db_field_name === 'supplierId' || 
-        field.db_field_name === 'supplier') {
+    if (field.field_code === 'supplier_id' || 
+        field.field_code === 'supplierId' || 
+        field.field_code === 'supplier') {
       const supplier = suppliers.find(s => String(s.id) === String(value))
       if (supplier) return supplier.supplier_name
     }
@@ -518,7 +518,7 @@ export default function ProductsPage() {
       if (!value || key === 'status') continue
       
       // 检查基本信息字段
-      const basicField = basicFields.find(f => f.db_field_name === key)
+      const basicField = basicFields.find(f => f.field_code === key)
       if (basicField) {
         const fieldValue = product.basic_info?.[key]
         if (String(fieldValue || '') !== value) return false
@@ -750,9 +750,9 @@ export default function ProductsPage() {
                               if (column.type === 'basic' && column.fieldId) {
                                 const field = basicFields.find(f => f.id === column.fieldId)
                                 if (field) {
-                                  let value = product.basic_info?.[field.db_field_name]
+                                  let value = product.basic_info?.[field.field_code]
                                   if ((value === null || value === undefined || value === '') && 
-                                      (field.db_field_name === 'supplier' || field.db_field_name === 'supplier_id')) {
+                                      (field.field_code === 'supplier' || field.field_code === 'supplier_id')) {
                                     value = product.basic_info?.supplier_id || product.basic_info?.supplier
                                   }
                                   content = <span className="text-sm text-gray-600 truncate">{getFieldDisplayValue(field, value)}</span>
@@ -876,16 +876,16 @@ export default function ProductsPage() {
                       <div key={field.id}>
                         <Label className="text-xs text-gray-500 mb-1 block">{field.field_name}</Label>
                         <Select
-                          value={filterValues[field.db_field_name] || ''}
+                          value={filterValues[field.field_code] || ''}
                           onValueChange={(value) => {
                             if (value === '__all__') {
                               const newFilters = { ...filterValues }
-                              delete newFilters[field.db_field_name]
+                              delete newFilters[field.field_code]
                               setFilterValues(newFilters)
                             } else {
                               setFilterValues({
                                 ...filterValues,
-                                [field.db_field_name]: value,
+                                [field.field_code]: value,
                               })
                             }
                           }}
