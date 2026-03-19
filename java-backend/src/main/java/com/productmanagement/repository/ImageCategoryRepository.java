@@ -10,6 +10,4 @@ import java.util.List;
 public interface ImageCategoryRepository extends JpaRepository<ImageCategory, Integer> {
     
     List<ImageCategory> findAllByOrderBySortOrderAsc();
-    
-    List<ImageCategory> findByTypeOrderBySortOrderAsc(String type);
 }

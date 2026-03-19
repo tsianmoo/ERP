@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Data
 @Entity
@@ -25,6 +26,9 @@ public class ProductFieldGroup {
     
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
+    
+    @OneToMany(mappedBy = "groupId", fetch = FetchType.LAZY)
+    private List<ProductBasicField> basicFields;
     
     @PrePersist
     protected void onCreate() {

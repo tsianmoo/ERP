@@ -67,6 +67,28 @@ export const productsApi = {
   update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/products/${id}`, { method: 'PUT', body: data }),
 
   delete: (id: number) => callJavaBackend<unknown>(`/api/products/${id}`, { method: 'DELETE' }),
+
+  // 商品草稿
+  getDraft: () => callJavaBackend<unknown>('/api/products/draft'),
+  
+  saveDraft: (data: unknown) => callJavaBackend<unknown>('/api/products/draft', { method: 'POST', body: data }),
+  
+  clearDraft: () => callJavaBackend<unknown>('/api/products/draft', { method: 'DELETE' }),
+
+  // 批量更新
+  batchUpdate: (data: unknown) => callJavaBackend<unknown>('/api/products/batch-update', { method: 'POST', body: data }),
+
+  // 生成SKU
+  generateSku: (data: unknown) => callJavaBackend<unknown>('/api/products/generate-sku', { method: 'POST', body: data }),
+
+  // 生成条码
+  generateBarcode: (data: unknown) => callJavaBackend<unknown>('/api/products/barcodes/generate', { method: 'POST', body: data }),
+
+  // 生成编码
+  generateCode: (data: unknown) => callJavaBackend<unknown>('/api/products/codes/generate', { method: 'POST', body: data }),
+
+  // 生成字段值
+  generateFieldValue: (data: unknown) => callJavaBackend<unknown>('/api/products/generate-field-value', { method: 'POST', body: data }),
 };
 
 // 商品属性相关 API
@@ -121,6 +143,19 @@ export const basicFieldsApi = {
   delete: (id: number) => callJavaBackend<unknown>(`/api/products/basic-fields/${id}`, { method: 'DELETE' }),
 };
 
+// 商品字段分组相关 API
+export const fieldGroupsApi = {
+  list: () => callJavaBackend<unknown>('/api/products/field-groups'),
+
+  get: (id: number) => callJavaBackend<unknown>(`/api/products/field-groups/${id}`),
+
+  create: (data: unknown) => callJavaBackend<unknown>('/api/products/field-groups', { method: 'POST', body: data }),
+
+  update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/products/field-groups/${id}`, { method: 'PUT', body: data }),
+
+  delete: (id: number) => callJavaBackend<unknown>(`/api/products/field-groups/${id}`, { method: 'DELETE' }),
+};
+
 // 编码规则相关 API
 export const codeRulesApi = {
   list: () => callJavaBackend<unknown>('/api/products/code-rules'),
@@ -132,6 +167,9 @@ export const codeRulesApi = {
   update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/products/code-rules/${id}`, { method: 'PUT', body: data }),
 
   delete: (id: number) => callJavaBackend<unknown>(`/api/products/code-rules/${id}`, { method: 'DELETE' }),
+
+  // 获取变量列表
+  getVariables: () => callJavaBackend<unknown>('/api/products/code-rules/variables'),
 };
 
 // 颜色分组相关 API
@@ -149,6 +187,21 @@ export const colorGroupsApi = {
   reorder: (groupIds: number[]) => callJavaBackend<unknown>('/api/products/color-groups/reorder', { method: 'POST', body: { groupIds } }),
 };
 
+// 颜色值相关 API
+export const colorValuesApi = {
+  list: () => callJavaBackend<unknown>('/api/products/color-values'),
+
+  getByGroup: (groupId: number) => callJavaBackend<unknown>(`/api/products/color-values/group/${groupId}`),
+
+  get: (id: number) => callJavaBackend<unknown>(`/api/products/color-values/${id}`),
+
+  create: (data: unknown) => callJavaBackend<unknown>('/api/products/color-values', { method: 'POST', body: data }),
+
+  update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/products/color-values/${id}`, { method: 'PUT', body: data }),
+
+  delete: (id: number) => callJavaBackend<unknown>(`/api/products/color-values/${id}`, { method: 'DELETE' }),
+};
+
 // 尺码分组相关 API
 export const sizeGroupsApi = {
   list: () => callJavaBackend<unknown>('/api/products/size-groups'),
@@ -164,6 +217,21 @@ export const sizeGroupsApi = {
   reorder: (groupIds: number[]) => callJavaBackend<unknown>('/api/products/size-groups/reorder', { method: 'POST', body: { groupIds } }),
 };
 
+// 尺码值相关 API
+export const sizeValuesApi = {
+  list: () => callJavaBackend<unknown>('/api/products/size-values'),
+
+  getByGroup: (groupId: number) => callJavaBackend<unknown>(`/api/products/size-values/group/${groupId}`),
+
+  get: (id: number) => callJavaBackend<unknown>(`/api/products/size-values/${id}`),
+
+  create: (data: unknown) => callJavaBackend<unknown>('/api/products/size-values', { method: 'POST', body: data }),
+
+  update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/products/size-values/${id}`, { method: 'PUT', body: data }),
+
+  delete: (id: number) => callJavaBackend<unknown>(`/api/products/size-values/${id}`, { method: 'DELETE' }),
+};
+
 // 供应商相关 API
 export const suppliersApi = {
   list: () => callJavaBackend<unknown>('/api/suppliers'),
@@ -175,6 +243,21 @@ export const suppliersApi = {
   update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/suppliers/${id}`, { method: 'PUT', body: data }),
 
   delete: (id: number) => callJavaBackend<unknown>(`/api/suppliers/${id}`, { method: 'DELETE' }),
+};
+
+// 供应商基本字段相关 API
+export const supplierBasicFieldsApi = {
+  list: () => callJavaBackend<unknown>('/api/suppliers/basic-fields'),
+
+  getEnabled: () => callJavaBackend<unknown>('/api/suppliers/basic-fields/enabled'),
+
+  get: (id: number) => callJavaBackend<unknown>(`/api/suppliers/basic-fields/${id}`),
+
+  create: (data: unknown) => callJavaBackend<unknown>('/api/suppliers/basic-fields', { method: 'POST', body: data }),
+
+  update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/suppliers/basic-fields/${id}`, { method: 'PUT', body: data }),
+
+  delete: (id: number) => callJavaBackend<unknown>(`/api/suppliers/basic-fields/${id}`, { method: 'DELETE' }),
 };
 
 // 图片相关 API
@@ -190,4 +273,17 @@ export const imagesApi = {
   update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/images/${id}`, { method: 'PUT', body: data }),
 
   delete: (id: number) => callJavaBackend<unknown>(`/api/images/${id}`, { method: 'DELETE' }),
+};
+
+// 图片分类相关 API
+export const imageCategoriesApi = {
+  list: () => callJavaBackend<unknown>('/api/images/categories'),
+
+  get: (id: number) => callJavaBackend<unknown>(`/api/images/categories/${id}`),
+
+  create: (data: unknown) => callJavaBackend<unknown>('/api/images/categories', { method: 'POST', body: data }),
+
+  update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/images/categories/${id}`, { method: 'PUT', body: data }),
+
+  delete: (id: number) => callJavaBackend<unknown>(`/api/images/categories/${id}`, { method: 'DELETE' }),
 };

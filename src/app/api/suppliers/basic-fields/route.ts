@@ -1,45 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { supplierBasicFieldsApi } from '@/lib/java-backend-client';
 
+// GET /api/suppliers/basic-fields - 获取所有供应商基本字段
 export async function GET() {
   try {
-    const client = getSupabaseClient();
-    const { data, error } = await client
-      .from('supplier_basic_fields')
-      .select('*')
-      .order('sort_order', { ascending: true });
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    const result = await supplierBasicFieldsApi.list();
+    
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
     }
-    return NextResponse.json({ data: data || [] });
+    
+    return NextResponse.json(result.data);
   } catch (error) {
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
   }
 }
 
+// POST /api/suppliers/basic-fields - 创建供应商基本字段
 export async function POST(request: NextRequest) {
   try {
-    const client = getSupabaseClient();
     const body = await request.json();
-
-    const { data, error } = await client
-      .from('supplier_basic_fields')
-      .insert({
-        field_name: body.fieldName,
-        field_code: body.fieldCode,
-        field_type: body.fieldType,
-        is_required: body.isRequired || false,
-        options: body.options || null,
-        sort_order: body.sortOrder || 0,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    const result = await supplierBasicFieldsApi.create(body);
+    
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
     }
-    return NextResponse.json({ data }, { status: 201 });
+    
+    return NextResponse.json(result.data, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
   }

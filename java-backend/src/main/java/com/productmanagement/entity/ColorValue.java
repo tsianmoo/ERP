@@ -23,11 +23,11 @@ public class ColorValue {
     @Column(name = "code", nullable = false)
     private String code;
     
+    @Column(name = "transparency")
+    private Integer transparency = 10;
+    
     @Column(name = "hex_code")
     private String hexCode;
-    
-    @Column(name = "transparency")
-    private Integer transparency;
     
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
@@ -40,11 +40,12 @@ public class ColorValue {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", insertable = false, updatable = false)
-    private ColorGroup group;
+    private ColorGroup colorGroup;
     
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();
+        if (transparency == null) transparency = 10;
         if (sortOrder == null) sortOrder = 0;
     }
     

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Data
 @Entity
@@ -18,7 +19,7 @@ public class ImageCategory {
     private String name;
     
     @Column(name = "type")
-    private String type = "manual";
+    private String type;
     
     @Column(name = "attribute_code")
     private String attributeCode;
@@ -32,10 +33,12 @@ public class ImageCategory {
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
     
+    @OneToMany(mappedBy = "categoryId", fetch = FetchType.LAZY)
+    private List<Image> images;
+    
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();
-        if (type == null) type = "manual";
         if (sortOrder == null) sortOrder = 0;
     }
     

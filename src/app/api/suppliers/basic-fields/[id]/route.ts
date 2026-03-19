@@ -1,55 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { supplierBasicFieldsApi } from '@/lib/java-backend-client';
 
-export async function PUT(
+// GET /api/suppliers/basic-fields/[id] - 获取单个供应商基本字段
+export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const client = getSupabaseClient();
     const { id } = await params;
-    const body = await request.json();
-
-    const { data, error } = await client
-      .from('supplier_basic_fields')
-      .update({
-        field_name: body.fieldName,
-        field_code: body.fieldCode,
-        field_type: body.fieldType,
-        is_required: body.isRequired,
-        options: body.options,
-        sort_order: body.sortOrder,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    const result = await supplierBasicFieldsApi.get(parseInt(id));
+    
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
     }
-    return NextResponse.json({ data });
+    
+    return NextResponse.json(result.data);
   } catch (error) {
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
   }
 }
 
+// PUT /api/suppliers/basic-fields/[id] - 更新供应商基本字段
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+    const result = await supplierBasicFieldsApi.update(parseInt(id), body);
+    
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
+    }
+    
+    return NextResponse.json(result.data);
+  } catch (error) {
+    return NextResponse.json({ error: '服务器错误' }, { status: 500 });
+  }
+}
+
+// DELETE /api/suppliers/basic-fields/[id] - 删除供应商基本字段
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const client = getSupabaseClient();
     const { id } = await params;
-
-    const { error } = await client
-      .from('supplier_basic_fields')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    const result = await supplierBasicFieldsApi.delete(parseInt(id));
+    
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
     }
+    
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });

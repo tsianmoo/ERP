@@ -10,4 +10,6 @@ import java.util.List;
 public interface ColorValueRepository extends JpaRepository<ColorValue, Integer> {
     
     List<ColorValue> findByGroupIdOrderBySortOrderAsc(Integer groupId);
+    
+    void deleteByGroupId(Integer groupId);
 }

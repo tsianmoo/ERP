@@ -10,4 +10,6 @@ import java.util.List;
 public interface SizeValueRepository extends JpaRepository<SizeValue, Integer> {
     
     List<SizeValue> findByGroupIdOrderBySortOrderAsc(Integer groupId);
+    
+    void deleteByGroupId(Integer groupId);
 }

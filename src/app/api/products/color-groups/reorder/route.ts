@@ -1,36 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { colorGroupsApi } from '@/lib/java-backend-client';
 
-// PUT /api/products/color-groups/reorder - 批量更新颜色组排序
-export async function PUT(request: NextRequest) {
+// POST /api/products/color-groups/reorder - 颜色组排序
+export async function POST(request: NextRequest) {
   try {
-    const client = getSupabaseClient();
     const body = await request.json();
-    const { items } = body;
-
-    if (!Array.isArray(items) || items.length === 0) {
-      return NextResponse.json(
-        { error: '无效的排序数据' },
-        { status: 400 }
-      );
+    const result = await colorGroupsApi.reorder(body.groupIds || body);
+    
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
     }
-
-    // 批量更新排序
-    const updates = items.map((item: { id: number; sort_order: number }) =>
-      client
-        .from('color_groups')
-        .update({ sort_order: item.sort_order })
-        .eq('id', item.id)
-    );
-
-    await Promise.all(updates);
-
-    return NextResponse.json({ success: true });
+    
+    return NextResponse.json(result.data);
   } catch (error) {
-    console.error('更新颜色组排序失败:', error);
-    return NextResponse.json(
-      { error: '服务器错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器错误' }, { status: 500 });
   }
 }

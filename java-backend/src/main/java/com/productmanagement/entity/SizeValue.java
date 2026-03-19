@@ -34,7 +34,7 @@ public class SizeValue {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", insertable = false, updatable = false)
-    private SizeGroup group;
+    private SizeGroup sizeGroup;
     
     @PrePersist
     protected void onCreate() {

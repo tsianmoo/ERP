@@ -12,4 +12,6 @@ public interface SupplierBasicFieldRepository extends JpaRepository<SupplierBasi
     List<SupplierBasicField> findByEnabledTrueOrderBySortOrderAsc();
     
     List<SupplierBasicField> findAllByOrderBySortOrderAsc();
+    
+    List<SupplierBasicField> findByGroupIdOrderBySortOrderAsc(Integer groupId);
 }
