@@ -201,7 +201,7 @@ export default function ProductsPage() {
     }
   }, [basicFields, attributes])
 
-  // 初始化列配置 - 使用 flex 布局
+  // 初始化列配置 - 使用固定宽度布局
   const initColumnConfigs = () => {
     const savedConfig = localStorage.getItem('product-list-column-config')
     if (savedConfig) {
@@ -215,20 +215,24 @@ export default function ProductsPage() {
       }
     }
 
-    // 默认列配置 - flex 布局，参照商品属性页面
+    // 默认列配置 - 使用固定宽度，确保列内容不重叠
     const defaultConfigs: ColumnConfig[] = [
       { id: 'index', name: '序号', type: 'fixed', visible: true, flex: 0, width: 50, sortOrder: 0 },
-      { id: 'product_code', name: '货号', type: 'fixed', visible: true, flex: 2, sortOrder: 1 },
+      { id: 'product_code', name: '货号', type: 'fixed', visible: true, flex: 0, width: 100, sortOrder: 1 },
     ]
 
     let sortOrder = 2
     basicFields.forEach((field) => {
-      // 根据字段类型设置不同的 flex 值
-      let defaultFlex = 2
+      // 根据字段名设置不同的宽度
+      let defaultWidth = 100
       if (field.field_code === 'product_name') {
-        defaultFlex = 3
+        defaultWidth = 180 // 品名需要更宽
+      } else if (field.field_name.includes('供应商')) {
+        defaultWidth = 120 // 供应商需要更宽
+      } else if (field.field_name.includes('标准') || field.field_name.includes('技术')) {
+        defaultWidth = 120 // 标准类字段需要更宽
       } else if (field.field_type === 'boolean') {
-        defaultFlex = 1.5
+        defaultWidth = 80 // 布尔类型较窄
       }
       
       defaultConfigs.push({
@@ -236,7 +240,8 @@ export default function ProductsPage() {
         name: field.field_name,
         type: 'basic',
         visible: true,
-        flex: defaultFlex,
+        flex: 0,
+        width: defaultWidth,
         sortOrder: sortOrder++,
         fieldId: field.id,
       })
@@ -248,22 +253,23 @@ export default function ProductsPage() {
         name: attr.name,
         type: 'attribute',
         visible: true,
-        flex: 2,
+        flex: 0,
+        width: 80,
         sortOrder: sortOrder++,
         fieldId: attr.id,
       })
     })
 
     defaultConfigs.push(
-      { id: 'status', name: '状态', type: 'fixed', visible: true, flex: 1.5, sortOrder: sortOrder++ },
-      { id: 'created_at', name: '创建时间', type: 'fixed', visible: true, flex: 2, sortOrder: sortOrder++ },
+      { id: 'status', name: '状态', type: 'fixed', visible: true, flex: 0, width: 80, sortOrder: sortOrder++ },
+      { id: 'created_at', name: '创建时间', type: 'fixed', visible: true, flex: 0, width: 100, sortOrder: sortOrder++ },
       { id: 'actions', name: '操作', type: 'fixed', visible: true, flex: 0, width: 180, sortOrder: sortOrder }
     )
 
     setColumnConfigs(defaultConfigs)
   }
 
-  // 验证列配置 - 支持从旧版本 width 迁移到 flex
+  // 验证列配置 - 统一使用固定宽度
   const validateColumnConfig = (savedConfig: ColumnConfig[]): ColumnConfig[] => {
     const validIds = new Set<string>()
     
@@ -276,24 +282,18 @@ export default function ProductsPage() {
     basicFields.forEach(f => validIds.add(`basic_${f.id}`))
     attributes.forEach(a => validIds.add(`attr_${a.id}`))
 
-    // 过滤有效配置，并迁移旧版本 width 到 flex
+    // 过滤有效配置，统一转换为固定宽度
     let filtered = savedConfig.filter(c => validIds.has(c.id)).map(c => {
-      // 如果缺少 flex 属性但有 width 属性，进行迁移
-      if (c.flex === undefined) {
-        // 固定宽度列（序号、操作）
-        if (c.id === 'index') {
-          return { ...c, flex: 0, width: 50 }
-        }
-        if (c.id === 'actions') {
-          return { ...c, flex: 0, width: 180 }
-        }
-        // 其他列根据 width 转换为 flex 比例
-        const width = (c as any).width || 100
-        const flex = width / 100
-        const { width: _, ...rest } = c as any
-        return { ...rest, flex }
+      // 确保所有列都有宽度
+      if (!c.width) {
+        if (c.id === 'index') return { ...c, flex: 0, width: 50 }
+        if (c.id === 'product_code') return { ...c, flex: 0, width: 100 }
+        if (c.id === 'actions') return { ...c, flex: 0, width: 180 }
+        if (c.id === 'status') return { ...c, flex: 0, width: 80 }
+        if (c.id === 'created_at') return { ...c, flex: 0, width: 100 }
+        return { ...c, flex: 0, width: 100 }
       }
-      return c
+      return { ...c, flex: 0 }
     })
     
     const existingIds = new Set(filtered.map(c => c.id))
@@ -302,12 +302,16 @@ export default function ProductsPage() {
     basicFields.forEach((field) => {
       const configId = `basic_${field.id}`
       if (!existingIds.has(configId)) {
-        // 根据字段类型设置不同的 flex 值
-        let defaultFlex = 2
+        // 根据字段名设置不同的宽度
+        let defaultWidth = 100
         if (field.field_code === 'product_name') {
-          defaultFlex = 3
+          defaultWidth = 180
+        } else if (field.field_name.includes('供应商')) {
+          defaultWidth = 120
+        } else if (field.field_name.includes('标准') || field.field_name.includes('技术')) {
+          defaultWidth = 120
         } else if (field.field_type === 'boolean') {
-          defaultFlex = 1.5
+          defaultWidth = 80
         }
         
         filtered.push({
@@ -315,7 +319,8 @@ export default function ProductsPage() {
           name: field.field_name,
           type: 'basic',
           visible: true,
-          flex: defaultFlex,
+          flex: 0,
+          width: defaultWidth,
           sortOrder: ++maxSortOrder,
           fieldId: field.id,
         })
@@ -330,7 +335,8 @@ export default function ProductsPage() {
           name: attr.name,
           type: 'attribute',
           visible: true,
-          flex: 2,
+          flex: 0,
+          width: 80,
           sortOrder: ++maxSortOrder,
           fieldId: attr.id,
         })
@@ -689,20 +695,23 @@ export default function ProductsPage() {
                     className="m-0"
                   />
                 </div>
-                {/* 动态列 - 使用 whitespace-nowrap 防止换行 */}
+                {/* 动态列 - 使用固定宽度，防止重叠 */}
                 {columnConfigs
                   .filter(c => c.visible && c.id !== 'actions')
                   .sort((a, b) => a.sortOrder - b.sortOrder)
                   .map((column) => {
-                    // 完全参照商品属性页面的样式
-                    const cellStyle: React.CSSProperties = column.flex === 0 && column.width
-                      ? { width: `${column.width}px`, flexShrink: 0 }
-                      : { flex: column.flex, minWidth: '80px' }
+                    // 使用固定宽度
+                    const width = column.width || 100
+                    const cellStyle: React.CSSProperties = { 
+                      width: `${width}px`, 
+                      flexShrink: 0,
+                      minWidth: `${width}px`
+                    }
                     
                     return (
                       <div
                         key={column.id}
-                        className="flex items-center justify-center px-3 text-xs font-medium text-gray-500 whitespace-nowrap"
+                        className="flex items-center justify-center px-2 text-xs font-medium text-gray-500 whitespace-nowrap"
                         style={cellStyle}
                       >
                         {column.name}
@@ -739,15 +748,18 @@ export default function ProductsPage() {
                           className="m-0"
                         />
                       </div>
-                      {/* 动态列单元格 - 使用 whitespace-nowrap 防止换行 */}
+                      {/* 动态列单元格 - 使用固定宽度，防止重叠 */}
                       {columnConfigs
                         .filter(c => c.visible && c.id !== 'actions')
                         .sort((a, b) => a.sortOrder - b.sortOrder)
                         .map((column) => {
-                          // 完全参照商品属性页面的样式
-                          const cellStyle: React.CSSProperties = column.flex === 0 && column.width
-                            ? { width: `${column.width}px`, flexShrink: 0 }
-                            : { flex: column.flex, minWidth: '80px' }
+                          // 使用固定宽度
+                          const width = column.width || 100
+                          const cellStyle: React.CSSProperties = { 
+                            width: `${width}px`, 
+                            flexShrink: 0,
+                            minWidth: `${width}px`
+                          }
                           
                           let content: React.ReactNode = '-'
 
