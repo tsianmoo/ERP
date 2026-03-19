@@ -2540,25 +2540,29 @@ export default function AttributesPage() {
       }}>
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-hidden p-0">
           <DialogHeader className="px-4 pt-4 pb-2.5 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-sm font-medium text-gray-900">
-                管理子字段 - {managingAttribute?.name}
-              </DialogTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => {
-                  setSelectedAttribute(managingAttribute)
-                  setIsValueDialogOpen(true)
-                }}
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                添加值
-              </Button>
-            </div>
+            <DialogTitle className="text-sm font-medium text-gray-900">
+              管理子字段 - {managingAttribute?.name}
+            </DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col max-h-[calc(80vh-100px)]">
+          {/* 工具栏 */}
+          <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <span className="text-xs text-gray-500">
+              共 {managingAttribute?.product_attribute_values?.length || 0} 个子字段
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => {
+                setSelectedAttribute(managingAttribute)
+                setIsValueDialogOpen(true)
+              }}
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              添加值
+            </Button>
+          </div>
+          <div className="flex flex-col max-h-[calc(80vh-140px)]">
             <div className="flex-1 overflow-y-auto">
               {managingAttribute && (
                 <AttributeValueList
