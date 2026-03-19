@@ -6,6 +6,13 @@ COZE_WORKSPACE_PATH="${COZE_WORKSPACE_PATH:-$(pwd)}"
 NODE_ENV=development
 DEPLOY_RUN_PORT=5000
 
+# 设置 Java 环境变量
+export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk-amd64}"
+export PATH="${JAVA_HOME}/bin:${PATH}"
+
+# Java 可执行文件路径
+JAVA_CMD="${JAVA_HOME}/bin/java"
+
 cd "${COZE_WORKSPACE_PATH}"
 
 kill_port_if_listening() {
@@ -31,6 +38,22 @@ kill_port_if_listening() {
 start_java_backend() {
     echo "Starting Java backend service on port 8080..."
     
+    # 检查 Java 是否可用
+    if [[ ! -x "${JAVA_CMD}" ]]; then
+        echo "ERROR: Java not found at ${JAVA_CMD}"
+        echo "Please install Java 17 first"
+        return 1
+    fi
+    
+    # 检查 JAR 文件是否存在
+    JAR_FILE="${COZE_WORKSPACE_PATH}/java-backend/target/product-management-backend-1.0.0.jar"
+    if [[ ! -f "${JAR_FILE}" ]]; then
+        echo "JAR file not found, building..."
+        cd "${COZE_WORKSPACE_PATH}/java-backend"
+        mvn package -DskipTests -q
+        cd "${COZE_WORKSPACE_PATH}"
+    fi
+    
     # 解析数据库连接字符串
     PG_URL=${PGDATABASE_URL:-""}
     if [ -n "$PG_URL" ]; then
@@ -47,7 +70,7 @@ start_java_backend() {
     fi
     
     cd "${COZE_WORKSPACE_PATH}/java-backend"
-    nohup java -jar target/product-management-backend-1.0.0.jar > /app/work/logs/bypass/java-backend.log 2>&1 &
+    nohup "${JAVA_CMD}" -jar target/product-management-backend-1.0.0.jar > /app/work/logs/bypass/java-backend.log 2>&1 &
     echo "Java backend started with PID: $!"
     cd "${COZE_WORKSPACE_PATH}"
     
