@@ -689,7 +689,7 @@ export default function ProductsPage() {
                     className="m-0"
                   />
                 </div>
-                {/* 动态列 */}
+                {/* 动态列 - 使用 whitespace-nowrap 防止换行 */}
                 {columnConfigs
                   .filter(c => c.visible && c.id !== 'actions')
                   .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -697,12 +697,12 @@ export default function ProductsPage() {
                     // 完全参照商品属性页面的样式
                     const cellStyle: React.CSSProperties = column.flex === 0 && column.width
                       ? { width: `${column.width}px`, flexShrink: 0 }
-                      : { flex: column.flex }
+                      : { flex: column.flex, minWidth: '80px' }
                     
                     return (
                       <div
                         key={column.id}
-                        className="flex items-center justify-center px-2 text-xs font-medium text-gray-500"
+                        className="flex items-center justify-center px-3 text-xs font-medium text-gray-500 whitespace-nowrap"
                         style={cellStyle}
                       >
                         {column.name}
@@ -739,7 +739,7 @@ export default function ProductsPage() {
                           className="m-0"
                         />
                       </div>
-                      {/* 动态列单元格 */}
+                      {/* 动态列单元格 - 使用 whitespace-nowrap 防止换行 */}
                       {columnConfigs
                         .filter(c => c.visible && c.id !== 'actions')
                         .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -747,7 +747,7 @@ export default function ProductsPage() {
                           // 完全参照商品属性页面的样式
                           const cellStyle: React.CSSProperties = column.flex === 0 && column.width
                             ? { width: `${column.width}px`, flexShrink: 0 }
-                            : { flex: column.flex }
+                            : { flex: column.flex, minWidth: '80px' }
                           
                           let content: React.ReactNode = '-'
 
@@ -756,7 +756,7 @@ export default function ProductsPage() {
                               content = <span className="text-sm text-gray-600">{index + 1}</span>
                               break
                             case 'product_code':
-                              content = <span className="text-sm font-medium text-gray-900 truncate">{product.product_code}</span>
+                              content = <span className="text-sm font-medium text-gray-900 whitespace-nowrap">{product.product_code}</span>
                               break
                             case 'status':
                               content = product.status === 'active' 
@@ -766,7 +766,7 @@ export default function ProductsPage() {
                                 : <Badge variant="secondary" className="text-xs">禁用</Badge>
                               break
                             case 'created_at':
-                              content = <span className="text-sm text-gray-600">{new Date(product.created_at).toLocaleDateString('zh-CN')}</span>
+                              content = <span className="text-sm text-gray-600 whitespace-nowrap">{new Date(product.created_at).toLocaleDateString('zh-CN')}</span>
                               break
                             default:
                               if (column.type === 'basic' && column.fieldId) {
@@ -777,13 +777,13 @@ export default function ProductsPage() {
                                       (field.field_code === 'supplier' || field.field_code === 'supplier_id')) {
                                     value = product.basic_info?.supplier_id || product.basic_info?.supplier
                                   }
-                                  content = <span className="text-sm text-gray-600 truncate">{getFieldDisplayValue(field, value)}</span>
+                                  content = <span className="text-sm text-gray-600 whitespace-nowrap">{getFieldDisplayValue(field, value)}</span>
                                 }
                               }
                               else if (column.type === 'attribute' && column.fieldId) {
                                 const attr = attributes.find(a => a.id === column.fieldId)
                                 if (attr) {
-                                  content = <span className="text-sm text-gray-600 truncate">{getAttributeValueDisplay(attr, product.attribute_values?.[attr.code])}</span>
+                                  content = <span className="text-sm text-gray-600 whitespace-nowrap">{getAttributeValueDisplay(attr, product.attribute_values?.[attr.code])}</span>
                                 }
                               }
                           }
@@ -791,7 +791,7 @@ export default function ProductsPage() {
                           return (
                             <div
                               key={column.id}
-                              className="flex items-center justify-center px-2"
+                              className="flex items-center justify-center px-3"
                               style={cellStyle}
                             >
                               {content}
@@ -808,7 +808,7 @@ export default function ProductsPage() {
           {/* 右侧固定操作列 */}
           <div className="flex flex-col border-l border-gray-200 bg-white" style={{ minWidth: '180px', flexShrink: 0 }}>
             {/* 操作列表头 */}
-            <div className="flex items-center justify-center bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 h-10">
+            <div className="flex items-center justify-center bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 h-10 whitespace-nowrap">
               操作
             </div>
             {/* 操作列数据 */}

@@ -255,8 +255,8 @@ function SortableHeaderCell({
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    // flex 为 0 表示固定宽度，否则使用 flex 比例
-    ...(flex === 0 && width ? { width: `${width}px`, flexShrink: 0 } : { flex: flex }),
+    // flex 为 0 表示固定宽度，否则使用 flex 比例 + 最小宽度
+    ...(flex === 0 && width ? { width: `${width}px`, flexShrink: 0 } : { flex: flex, minWidth: '60px' }),
   }
 
   return (
@@ -264,8 +264,8 @@ function SortableHeaderCell({
       ref={setNodeRef}
       style={style}
       className={`
-        relative flex items-center justify-center text-xs font-medium select-none text-gray-500 bg-gray-50 h-10
-        ${isCheckbox ? 'pl-4 pr-2' : 'px-2'}
+        relative flex items-center justify-center text-xs font-medium select-none text-gray-500 bg-gray-50 h-10 whitespace-nowrap
+        ${isCheckbox ? 'pl-4 pr-2' : 'px-3'}
         ${isSelected
           ? 'bg-blue-50 text-blue-700 border-l-2 border-blue-300'
           : ''
@@ -2349,15 +2349,15 @@ export default function AttributesPage() {
                     // 跳过操作列，在固定区域单独渲染
                     if (colKey === 'actions') return null
 
-                    // flex 为 0 表示固定宽度，否则使用 flex 比例
+                    // flex 为 0 表示固定宽度，否则使用 flex 比例 + 最小宽度
                     const cellStyle: React.CSSProperties = column.flex === 0 && column.width
                       ? { width: `${column.width}px`, flexShrink: 0 }
-                      : { flex: column.flex }
+                      : { flex: column.flex, minWidth: '60px' }
 
                     return (
                       <div
                         key={colKey}
-                        className={`flex items-center justify-center ${colKey === 'checkbox' ? 'pl-4 pr-2' : 'px-2'}`}
+                        className={`flex items-center justify-center whitespace-nowrap ${colKey === 'checkbox' ? 'pl-4 pr-2' : 'px-3'}`}
                         style={cellStyle}
                       >
                         {colKey === 'checkbox' && (
@@ -2393,15 +2393,15 @@ export default function AttributesPage() {
                           <span className="text-sm text-gray-600">{index + 1}</span>
                         )}
                         {colKey === 'group' && (
-                          <span className={`text-sm text-gray-600 ${allowWrap ? 'break-words' : 'truncate'}`}>
+                          <span className="text-sm text-gray-600 whitespace-nowrap">
                             {attribute.product_attribute_groups?.name || attributeGroups.find((g: AttributeGroup) => g.id === attribute.group_id)?.name || '-'}
                           </span>
                         )}
                         {colKey === 'name' && (
-                          <span className={`text-sm font-medium text-gray-900 px-1 ${allowWrap ? 'break-words' : 'truncate'}`}>{attribute.name}</span>
+                          <span className="text-sm font-medium text-gray-900 whitespace-nowrap">{attribute.name}</span>
                         )}
                         {colKey === 'code' && (
-                          <span className={`text-sm text-gray-600 font-mono px-1 ${allowWrap ? 'break-words' : 'truncate'}`}>{attribute.field_code || '-'}</span>
+                          <span className="text-sm text-gray-600 font-mono whitespace-nowrap">{attribute.field_code || '-'}</span>
                         )}
                         {colKey === 'codeLength' && (
                           <span className="text-sm text-gray-600">{attribute.code_length} 位</span>
