@@ -215,7 +215,7 @@ export default function ProductsPage() {
       }
     }
 
-    // 默认列配置 - flex 布局
+    // 默认列配置 - flex 布局，参照商品属性页面
     const defaultConfigs: ColumnConfig[] = [
       { id: 'index', name: '序号', type: 'fixed', visible: true, flex: 0, width: 50, sortOrder: 0 },
       { id: 'product_code', name: '货号', type: 'fixed', visible: true, flex: 2, sortOrder: 1 },
@@ -223,9 +223,12 @@ export default function ProductsPage() {
 
     let sortOrder = 2
     basicFields.forEach((field) => {
-      let defaultFlex = 1
+      // 根据字段类型设置不同的 flex 值
+      let defaultFlex = 2
       if (field.field_code === 'product_name') {
-        defaultFlex = 2
+        defaultFlex = 3
+      } else if (field.field_type === 'boolean') {
+        defaultFlex = 1.5
       }
       
       defaultConfigs.push({
@@ -245,15 +248,15 @@ export default function ProductsPage() {
         name: attr.name,
         type: 'attribute',
         visible: true,
-        flex: 1,
+        flex: 2,
         sortOrder: sortOrder++,
         fieldId: attr.id,
       })
     })
 
     defaultConfigs.push(
-      { id: 'status', name: '状态', type: 'fixed', visible: true, flex: 1, sortOrder: sortOrder++ },
-      { id: 'created_at', name: '创建时间', type: 'fixed', visible: true, flex: 1.5, sortOrder: sortOrder++ },
+      { id: 'status', name: '状态', type: 'fixed', visible: true, flex: 1.5, sortOrder: sortOrder++ },
+      { id: 'created_at', name: '创建时间', type: 'fixed', visible: true, flex: 2, sortOrder: sortOrder++ },
       { id: 'actions', name: '操作', type: 'fixed', visible: true, flex: 0, width: 180, sortOrder: sortOrder }
     )
 
@@ -299,9 +302,12 @@ export default function ProductsPage() {
     basicFields.forEach((field) => {
       const configId = `basic_${field.id}`
       if (!existingIds.has(configId)) {
-        let defaultFlex = 1
+        // 根据字段类型设置不同的 flex 值
+        let defaultFlex = 2
         if (field.field_code === 'product_name') {
-          defaultFlex = 2
+          defaultFlex = 3
+        } else if (field.field_type === 'boolean') {
+          defaultFlex = 1.5
         }
         
         filtered.push({
@@ -324,7 +330,7 @@ export default function ProductsPage() {
           name: attr.name,
           type: 'attribute',
           visible: true,
-          flex: 1,
+          flex: 2,
           sortOrder: ++maxSortOrder,
           fieldId: attr.id,
         })
@@ -688,14 +694,15 @@ export default function ProductsPage() {
                   .filter(c => c.visible && c.id !== 'actions')
                   .sort((a, b) => a.sortOrder - b.sortOrder)
                   .map((column) => {
+                    // 完全参照商品属性页面的样式
                     const cellStyle: React.CSSProperties = column.flex === 0 && column.width
-                      ? { width: `${column.width}px`, flexShrink: 0, minWidth: `${column.width}px` }
-                      : { flex: column.flex, minWidth: 0 }
+                      ? { width: `${column.width}px`, flexShrink: 0 }
+                      : { flex: column.flex }
                     
                     return (
                       <div
                         key={column.id}
-                        className="flex items-center justify-center px-2 whitespace-nowrap text-xs font-medium text-gray-500 overflow-hidden"
+                        className="flex items-center justify-center px-2 text-xs font-medium text-gray-500"
                         style={cellStyle}
                       >
                         {column.name}
@@ -737,9 +744,10 @@ export default function ProductsPage() {
                         .filter(c => c.visible && c.id !== 'actions')
                         .sort((a, b) => a.sortOrder - b.sortOrder)
                         .map((column) => {
+                          // 完全参照商品属性页面的样式
                           const cellStyle: React.CSSProperties = column.flex === 0 && column.width
-                            ? { width: `${column.width}px`, flexShrink: 0, minWidth: `${column.width}px` }
-                            : { flex: column.flex, minWidth: 0 }
+                            ? { width: `${column.width}px`, flexShrink: 0 }
+                            : { flex: column.flex }
                           
                           let content: React.ReactNode = '-'
 
@@ -748,7 +756,7 @@ export default function ProductsPage() {
                               content = <span className="text-sm text-gray-600">{index + 1}</span>
                               break
                             case 'product_code':
-                              content = <span className="text-sm font-medium text-gray-900 truncate block text-center">{product.product_code}</span>
+                              content = <span className="text-sm font-medium text-gray-900 truncate">{product.product_code}</span>
                               break
                             case 'status':
                               content = product.status === 'active' 
@@ -769,13 +777,13 @@ export default function ProductsPage() {
                                       (field.field_code === 'supplier' || field.field_code === 'supplier_id')) {
                                     value = product.basic_info?.supplier_id || product.basic_info?.supplier
                                   }
-                                  content = <span className="text-sm text-gray-600 truncate block text-center">{getFieldDisplayValue(field, value)}</span>
+                                  content = <span className="text-sm text-gray-600 truncate">{getFieldDisplayValue(field, value)}</span>
                                 }
                               }
                               else if (column.type === 'attribute' && column.fieldId) {
                                 const attr = attributes.find(a => a.id === column.fieldId)
                                 if (attr) {
-                                  content = <span className="text-sm text-gray-600 truncate block text-center">{getAttributeValueDisplay(attr, product.attribute_values?.[attr.code])}</span>
+                                  content = <span className="text-sm text-gray-600 truncate">{getAttributeValueDisplay(attr, product.attribute_values?.[attr.code])}</span>
                                 }
                               }
                           }
@@ -783,7 +791,7 @@ export default function ProductsPage() {
                           return (
                             <div
                               key={column.id}
-                              className="flex items-center justify-center px-2 overflow-hidden"
+                              className="flex items-center justify-center px-2"
                               style={cellStyle}
                             >
                               {content}
