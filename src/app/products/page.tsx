@@ -149,7 +149,7 @@ function SortableColumnItem({ column, onVisibilityChange }: SortableColumnItemPr
 
       {/* 列宽提示 */}
       <div className="text-[10px] text-gray-400 flex-shrink-0">
-        {column.width ? `${column.width}px` : '-'}
+        {column.flex === 0 && column.width ? `${column.width}px` : '自适应'}
       </div>
     </div>
   )
@@ -201,7 +201,7 @@ export default function ProductsPage() {
     }
   }, [basicFields, attributes])
 
-  // 初始化列配置 - 使用固定宽度布局，确保列内容不重叠
+  // 初始化列配置 - 自适应内容宽度
   const initColumnConfigs = () => {
     const savedConfig = localStorage.getItem('product-list-column-config')
     if (savedConfig) {
@@ -215,7 +215,7 @@ export default function ProductsPage() {
       }
     }
 
-    // 默认列配置 - 使用固定宽度，确保列内容不重叠
+    // 默认列配置 - 列宽自适应内容
     const defaultConfigs: ColumnConfig[] = [
       { id: 'index', name: '序号', type: 'fixed', visible: true, flex: 0, width: 50, sortOrder: 0 },
       { id: 'product_code', name: '货号', type: 'fixed', visible: true, flex: 0, width: 100, sortOrder: 1 },
@@ -223,25 +223,12 @@ export default function ProductsPage() {
 
     let sortOrder = 2
     basicFields.forEach((field) => {
-      // 根据字段名设置不同的固定宽度
-      let width = 100 // 默认宽度
-      if (field.field_code === 'product_name') {
-        width = 160 // 品名需要更宽
-      } else if (field.field_name.includes('供应商')) {
-        width = 100 // 供应商
-      } else if (field.field_name.includes('标准') || field.field_name.includes('技术')) {
-        width = 120 // 标准类字段需要更宽
-      } else if (field.field_type === 'boolean') {
-        width = 60 // 布尔类型较窄
-      }
-      
       defaultConfigs.push({
         id: `basic_${field.id}`,
         name: field.field_name,
         type: 'basic',
         visible: true,
-        flex: 0,
-        width: width,
+        flex: 1, // 自适应
         sortOrder: sortOrder++,
         fieldId: field.id,
       })
@@ -253,8 +240,7 @@ export default function ProductsPage() {
         name: attr.name,
         type: 'attribute',
         visible: true,
-        flex: 0,
-        width: 80,
+        flex: 1,
         sortOrder: sortOrder++,
         fieldId: attr.id,
       })
@@ -262,14 +248,14 @@ export default function ProductsPage() {
 
     defaultConfigs.push(
       { id: 'status', name: '状态', type: 'fixed', visible: true, flex: 0, width: 60, sortOrder: sortOrder++ },
-      { id: 'created_at', name: '创建时间', type: 'fixed', visible: true, flex: 0, width: 90, sortOrder: sortOrder++ },
+      { id: 'created_at', name: '创建时间', type: 'fixed', visible: true, flex: 0, width: 100, sortOrder: sortOrder++ },
       { id: 'actions', name: '操作', type: 'fixed', visible: true, flex: 0, width: 180, sortOrder: sortOrder }
     )
 
     setColumnConfigs(defaultConfigs)
   }
 
-  // 验证列配置 - 使用固定宽度布局
+  // 验证列配置 - 自适应内容宽度
   const validateColumnConfig = (savedConfig: ColumnConfig[]): ColumnConfig[] => {
     const validIds = new Set<string>()
     
@@ -282,18 +268,16 @@ export default function ProductsPage() {
     basicFields.forEach(f => validIds.add(`basic_${f.id}`))
     attributes.forEach(a => validIds.add(`attr_${a.id}`))
 
-    // 过滤有效配置，统一转换为固定宽度
+    // 过滤有效配置
     let filtered = savedConfig.filter(c => validIds.has(c.id)).map(c => {
-      // 确保所有列都有宽度
-      if (!c.width) {
-        if (c.id === 'index') return { ...c, flex: 0, width: 50 }
-        if (c.id === 'product_code') return { ...c, flex: 0, width: 100 }
-        if (c.id === 'actions') return { ...c, flex: 0, width: 180 }
-        if (c.id === 'status') return { ...c, flex: 0, width: 60 }
-        if (c.id === 'created_at') return { ...c, flex: 0, width: 90 }
-        return { ...c, flex: 0, width: 100 }
-      }
-      return { ...c, flex: 0 }
+      // 固定列保持宽度
+      if (c.id === 'index') return { ...c, flex: 0, width: 50 }
+      if (c.id === 'product_code') return { ...c, flex: 0, width: 100 }
+      if (c.id === 'actions') return { ...c, flex: 0, width: 180 }
+      if (c.id === 'status') return { ...c, flex: 0, width: 60 }
+      if (c.id === 'created_at') return { ...c, flex: 0, width: 100 }
+      // 其他列使用自适应
+      return { ...c, flex: c.flex || 1 }
     })
     
     const existingIds = new Set(filtered.map(c => c.id))
@@ -302,25 +286,12 @@ export default function ProductsPage() {
     basicFields.forEach((field) => {
       const configId = `basic_${field.id}`
       if (!existingIds.has(configId)) {
-        // 根据字段名设置不同的固定宽度
-        let width = 100
-        if (field.field_code === 'product_name') {
-          width = 160
-        } else if (field.field_name.includes('供应商')) {
-          width = 100
-        } else if (field.field_name.includes('标准') || field.field_name.includes('技术')) {
-          width = 120
-        } else if (field.field_type === 'boolean') {
-          width = 60
-        }
-        
         filtered.push({
           id: configId,
           name: field.field_name,
           type: 'basic',
           visible: true,
-          flex: 0,
-          width: width,
+          flex: 1,
           sortOrder: ++maxSortOrder,
           fieldId: field.id,
         })
@@ -335,8 +306,7 @@ export default function ProductsPage() {
           name: attr.name,
           type: 'attribute',
           visible: true,
-          flex: 0,
-          width: 80,
+          flex: 1,
           sortOrder: ++maxSortOrder,
           fieldId: attr.id,
         })
@@ -695,16 +665,15 @@ export default function ProductsPage() {
                     className="m-0"
                   />
                 </div>
-                {/* 动态列 - 使用固定宽度，与商品属性页面一致 */}
+                {/* 动态列 - 自适应内容宽度 */}
                 {columnConfigs
                   .filter(c => c.visible && c.id !== 'actions')
                   .sort((a, b) => a.sortOrder - b.sortOrder)
                   .map((column) => {
-                    // 使用固定宽度
-                    const cellStyle: React.CSSProperties = { 
-                      width: `${column.width || 100}px`, 
-                      flexShrink: 0 
-                    }
+                    // 固定宽度列使用 width，自适应列使用 max-content
+                    const cellStyle: React.CSSProperties = column.flex === 0 && column.width
+                      ? { width: `${column.width}px`, flexShrink: 0 }
+                      : { width: 'max-content', minWidth: 'max-content', flexShrink: 0 }
                     
                     return (
                       <div
@@ -746,16 +715,15 @@ export default function ProductsPage() {
                           className="m-0"
                         />
                       </div>
-                      {/* 动态列单元格 - 使用固定宽度，与商品属性页面一致 */}
+                      {/* 动态列单元格 - 自适应内容宽度 */}
                       {columnConfigs
                         .filter(c => c.visible && c.id !== 'actions')
                         .sort((a, b) => a.sortOrder - b.sortOrder)
                         .map((column) => {
-                          // 使用固定宽度
-                          const cellStyle: React.CSSProperties = { 
-                            width: `${column.width || 100}px`, 
-                            flexShrink: 0 
-                          }
+                          // 固定宽度列使用 width，自适应列使用 max-content
+                          const cellStyle: React.CSSProperties = column.flex === 0 && column.width
+                            ? { width: `${column.width}px`, flexShrink: 0 }
+                            : { width: 'max-content', minWidth: 'max-content', flexShrink: 0 }
                           
                           let content: React.ReactNode = '-'
 
