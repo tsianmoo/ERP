@@ -1,28 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { attributesApi } from '@/lib/java-backend-client';
 
 // GET /api/products/attributes - 获取所有属性配置
 export async function GET() {
   try {
-    const client = getSupabaseClient();
-    const { data, error } = await client
-      .from('product_attributes')
-      .select(`
-        *,
-        product_attribute_groups (id, name),
-        product_attribute_values(*)
-      `)
-      .order('sort_order', { ascending: true });
+    const result = await attributesApi.list();
 
-    if (error) {
+    if (result.error) {
       return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
+        { error: result.error },
+        { status: result.status }
       );
     }
 
-    return NextResponse.json({ data: data || [] });
+    return NextResponse.json(result.data);
   } catch (error) {
+    console.error('获取属性列表失败:', error);
     return NextResponse.json(
       { error: '服务器错误' },
       { status: 500 }
@@ -33,44 +26,38 @@ export async function GET() {
 // POST /api/products/attributes - 创建属性配置
 export async function POST(request: NextRequest) {
   try {
-    const client = getSupabaseClient();
     const body = await request.json();
 
-    const { data, error } = await client
-      .from('product_attributes')
-      .insert({
-        name: body.name,
-        code: body.code,
-        sort_order: body.sortOrder || 0,
-        code_length: body.codeLength || 2,
-        enabled: body.enabled !== undefined ? body.enabled : true,
-        // Layout configuration
-        width: body.width || 100,
-        columns: body.columns || 1,
-        column_width: body.columnWidth || 1,
-        spacing: body.spacing || 2,
-        row_index: body.rowIndex || 1,
-        new_row: body.newRow || false,
-        group_sort_order: body.groupSortOrder || 0,
-        is_required: body.isRequired || false,
-        group_id: body.group_id !== undefined && body.group_id !== null ? body.group_id : null,
-      })
-      .select(`
-        *,
-        product_attribute_groups (id, name),
-        product_attribute_values(*)
-      `)
-      .single();
+    const javaRequest = {
+      name: body.name,
+      code: body.code,
+      attributeCode: body.attributeCode,
+      sortOrder: body.sortOrder || 0,
+      codeLength: body.codeLength || 2,
+      enabled: body.enabled !== undefined ? body.enabled : true,
+      width: body.width || 100,
+      columns: body.columns || 1,
+      columnWidth: body.columnWidth || 1,
+      spacing: body.spacing || 2,
+      rowIndex: body.rowIndex || 1,
+      newRow: body.newRow || false,
+      groupSortOrder: body.groupSortOrder || 0,
+      isRequired: body.isRequired || false,
+      groupId: body.group_id,
+    };
 
-    if (error) {
+    const result = await attributesApi.create(javaRequest);
+
+    if (result.error) {
       return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
+        { error: result.error },
+        { status: result.status }
       );
     }
 
-    return NextResponse.json({ data }, { status: 201 });
+    return NextResponse.json(result.data, { status: 201 });
   } catch (error) {
+    console.error('创建属性失败:', error);
     return NextResponse.json(
       { error: '服务器错误' },
       { status: 500 }

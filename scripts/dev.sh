@@ -9,25 +9,66 @@ DEPLOY_RUN_PORT=5000
 cd "${COZE_WORKSPACE_PATH}"
 
 kill_port_if_listening() {
+    local port=$1
     local pids
-    pids=$(ss -H -lntp 2>/dev/null | awk -v port="${DEPLOY_RUN_PORT}" '$4 ~ ":"port"$"' | grep -o 'pid=[0-9]*' | cut -d= -f2 | paste -sd' ' - || true)
+    pids=$(ss -H -lntp 2>/dev/null | awk -v port="${port}" '$4 ~ ":"port"$"' | grep -o 'pid=[0-9]*' | cut -d= -f2 | paste -sd' ' - || true)
     if [[ -z "${pids}" ]]; then
-      echo "Port ${DEPLOY_RUN_PORT} is free."
+      echo "Port ${port} is free."
       return
     fi
-    echo "Port ${DEPLOY_RUN_PORT} in use by PIDs: ${pids} (SIGKILL)"
+    echo "Port ${port} in use by PIDs: ${pids} (SIGKILL)"
     echo "${pids}" | xargs -I {} kill -9 {}
     sleep 1
-    pids=$(ss -H -lntp 2>/dev/null | awk -v port="${DEPLOY_RUN_PORT}" '$4 ~ ":"port"$"' | grep -o 'pid=[0-9]*' | cut -d= -f2 | paste -sd' ' - || true)
+    pids=$(ss -H -lntp 2>/dev/null | awk -v port="${port}" '$4 ~ ":"port"$"' | grep -o 'pid=[0-9]*' | cut -d= -f2 | paste -sd' ' - || true)
     if [[ -n "${pids}" ]]; then
-      echo "Warning: port ${DEPLOY_RUN_PORT} still busy after SIGKILL, PIDs: ${pids}"
+      echo "Warning: port ${port} still busy after SIGKILL, PIDs: ${pids}"
     else
-      echo "Port ${DEPLOY_RUN_PORT} cleared."
+      echo "Port ${port} cleared."
     fi
 }
 
-echo "Clearing port ${PORT} before start."
-kill_port_if_listening
-echo "Starting HTTP service on port ${PORT} for dev..."
+# 启动 Java 后端服务
+start_java_backend() {
+    echo "Starting Java backend service on port 8080..."
+    
+    # 解析数据库连接字符串
+    PG_URL=${PGDATABASE_URL:-""}
+    if [ -n "$PG_URL" ]; then
+        DB_USER=$(echo "$PG_URL" | sed -n 's|.*://\([^:]*\):.*|\1|p')
+        DB_PASSWORD=$(echo "$PG_URL" | sed -n 's|.*://[^:]*:\([^@]*\)@.*|\1|p')
+        DB_HOST=$(echo "$PG_URL" | sed -n 's|.*@\([^:]*\):.*|\1|p')
+        DB_PORT=$(echo "$PG_URL" | sed -n 's|.*:\([0-9]*\)/.*|\1|p')
+        DB_NAME=$(echo "$PG_URL" | sed -n 's|.*/\([^?]*\)?.*|\1|p')
+        DB_PARAMS=$(echo "$PG_URL" | sed -n 's|.*?\(.*\)|\1|p')
+        
+        export SPRING_DATASOURCE_URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?${DB_PARAMS}"
+        export SPRING_DATASOURCE_USERNAME="$DB_USER"
+        export SPRING_DATASOURCE_PASSWORD="$DB_PASSWORD"
+    fi
+    
+    cd "${COZE_WORKSPACE_PATH}/java-backend"
+    nohup java -jar target/product-management-backend-1.0.0.jar > /app/work/logs/bypass/java-backend.log 2>&1 &
+    echo "Java backend started with PID: $!"
+    cd "${COZE_WORKSPACE_PATH}"
+    
+    # 等待 Java 后端启动
+    echo "Waiting for Java backend to start..."
+    for i in {1..30}; do
+        if curl -s http://localhost:8080/api/products > /dev/null 2>&1; then
+            echo "Java backend is ready!"
+            break
+        fi
+        sleep 1
+    done
+}
 
+echo "Clearing ports before start."
+kill_port_if_listening 5000
+kill_port_if_listening 8080
+
+# 启动 Java 后端
+start_java_backend
+
+echo "Starting Next.js frontend on port ${PORT}..."
+export JAVA_BACKEND_URL="http://localhost:8080"
 npx next dev --webpack --port $PORT
