@@ -9,9 +9,5 @@ import java.util.List;
 @Repository
 public interface SupplierBasicFieldRepository extends JpaRepository<SupplierBasicField, Integer> {
     
-    List<SupplierBasicField> findByEnabledTrueOrderBySortOrderAsc();
-    
     List<SupplierBasicField> findAllByOrderBySortOrderAsc();
-    
-    List<SupplierBasicField> findByGroupIdOrderBySortOrderAsc(Integer groupId);
 }
