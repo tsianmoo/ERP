@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -30,6 +31,7 @@ public class ProductAttributeDTO {
     private Boolean isRequired;
     private Integer groupId;
     private ProductAttributeGroupDTO group;
+    private List<AttributeValueDTO> productAttributeValues;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
     
@@ -40,5 +42,18 @@ public class ProductAttributeDTO {
     public static class ProductAttributeGroupDTO {
         private Integer id;
         private String name;
+    }
+    
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AttributeValueDTO {
+        private Integer id;
+        private Integer attributeId;
+        private String name;
+        private String code;
+        private Integer parentId;
+        private Integer sortOrder;
     }
 }

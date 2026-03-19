@@ -3,8 +3,10 @@ package com.productmanagement.service.impl;
 import com.productmanagement.dto.ProductAttributeDTO;
 import com.productmanagement.entity.ProductAttribute;
 import com.productmanagement.entity.ProductAttributeGroup;
+import com.productmanagement.entity.ProductAttributeValue;
 import com.productmanagement.repository.ProductAttributeRepository;
 import com.productmanagement.repository.ProductAttributeGroupRepository;
+import com.productmanagement.repository.ProductAttributeValueRepository;
 import com.productmanagement.service.ProductAttributeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,7 @@ public class ProductAttributeServiceImpl implements ProductAttributeService {
     
     private final ProductAttributeRepository attributeRepository;
     private final ProductAttributeGroupRepository groupRepository;
+    private final ProductAttributeValueRepository attributeValueRepository;
     
     @Override
     public List<ProductAttributeDTO> getAllAttributes() {
@@ -48,7 +51,7 @@ public class ProductAttributeServiceImpl implements ProductAttributeService {
         attribute.setCodeLength(request.getCodeLength() != null ? request.getCodeLength() : 2);
         attribute.setEnabled(request.getEnabled() != null ? request.getEnabled() : true);
         attribute.setWidth(request.getWidth());
-        attribute.setColumns(request.getColumns());
+        attribute.setColumns(request.getColumnWidth());
         attribute.setColumnWidth(request.getColumnWidth());
         attribute.setSpacing(request.getSpacing());
         attribute.setRowIndex(request.getRowIndex());
@@ -138,6 +141,19 @@ public class ProductAttributeServiceImpl implements ProductAttributeService {
                     .build();
         }
         
+        // 查询属性值列表
+        List<ProductAttributeValue> values = attributeValueRepository.findByAttributeIdOrderBySortOrderAsc(attribute.getId());
+        List<ProductAttributeDTO.AttributeValueDTO> valueDTOs = values.stream()
+                .map(v -> ProductAttributeDTO.AttributeValueDTO.builder()
+                        .id(v.getId())
+                        .attributeId(v.getAttributeId())
+                        .name(v.getName())
+                        .code(v.getCode())
+                        .parentId(v.getParentId())
+                        .sortOrder(v.getSortOrder())
+                        .build())
+                .collect(Collectors.toList());
+        
         return ProductAttributeDTO.builder()
                 .id(attribute.getId())
                 .name(attribute.getName())
@@ -156,6 +172,7 @@ public class ProductAttributeServiceImpl implements ProductAttributeService {
                 .isRequired(attribute.getIsRequired())
                 .groupId(attribute.getGroupId())
                 .group(groupDTO)
+                .productAttributeValues(valueDTOs)
                 .createdAt(attribute.getCreatedAt())
                 .updatedAt(attribute.getUpdatedAt())
                 .build();
