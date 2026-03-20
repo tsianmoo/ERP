@@ -92,7 +92,7 @@ public class ProductServiceImpl implements ProductService {
         if (request.getStatus() != null) {
             product.setStatus(request.getStatus());
         }
-        if (request.getColors() != null) {
+        if (request.getColors() != null && !request.getColors().isEmpty()) {
             product.setColorsData(request.getColors());
         }
         

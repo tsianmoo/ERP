@@ -474,18 +474,40 @@ export default function ProductsPage() {
       return '-'
     }
     
-    if (field.options && Array.isArray(field.options)) {
-      const option = field.options.find(opt => String(opt.value) === String(value))
-      if (option) return option.label
+    // 处理选项类型（options 可能是数组或 JSON 字符串）
+    if (field.options) {
+      let options: FieldOption[] = []
+      
+      // 如果 options 是字符串，尝试解析为 JSON
+      if (typeof field.options === 'string') {
+        try {
+          const parsed = JSON.parse(field.options)
+          if (Array.isArray(parsed)) {
+            options = parsed
+          } else {
+            // 旧格式：逗号分隔的字符串
+            const opts = field.options.split(',')
+            const index = parseInt(value)
+            if (!isNaN(index) && opts[index]) return opts[index]
+          }
+        } catch {
+          // 解析失败，当作逗号分隔的字符串处理
+          const opts = field.options.split(',')
+          const index = parseInt(value)
+          if (!isNaN(index) && opts[index]) return opts[index]
+        }
+      } else if (Array.isArray(field.options)) {
+        options = field.options
+      }
+      
+      // 从选项中查找匹配的值
+      if (options.length > 0) {
+        const option = options.find(opt => String(opt.value) === String(value))
+        if (option) return option.label
+      }
     }
     
-    if (field.options && typeof field.options === 'string') {
-      const options = field.options.split(',')
-      const index = parseInt(value)
-      if (!isNaN(index) && options[index]) return options[index]
-    }
-    
-    // 处理供应商字段
+    // 处理供应商字段（从供应商列表中查找）
     if (field.field_code === 'supplier_id' || 
         field.field_code === 'supplierId' || 
         field.field_code === 'supplier') {

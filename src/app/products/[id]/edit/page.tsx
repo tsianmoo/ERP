@@ -538,7 +538,8 @@ export default function EditProductPage() {
           attributeValues,
           imageUrls: images,
           status,
-          colors: selectedColorDetails, // 发送颜色信息（包含图片）
+          // 只有当有颜色数据时才发送colors字段，避免空数组导致的事务问题
+          ...(selectedColorDetails.length > 0 ? { colors: selectedColorDetails } : {}),
         }),
       })
 
