@@ -1537,6 +1537,7 @@ export default function BasicInfoPage() {
   const getFieldTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       text: '文本',
+      textarea: '文本多行',
       number: '数字',
       select: '单选',
       boolean: '布尔值',
