@@ -2120,153 +2120,156 @@ export default function BasicInfoPage() {
                     <Type className="h-3.5 w-3.5" />
                     字段设置
                   </div>
-                  {/* 分组 - 第一行 */}
-                  <div>
-                    <Label htmlFor="group" className="text-xs text-gray-500 mb-1 block">分组</Label>
-                    <Select
-                      value={formData.group}
-                      onValueChange={(value) => {
-                        const maxRowIndex = calculateMaxRowIndex(value)
-                        setFormData({
-                          ...formData,
-                          group: value,
-                          rowIndex: maxRowIndex + 1
-                        })
-                      }}
-                    >
-                      <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full max-w-[300px]">
-                        <SelectValue placeholder="选择分组" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {groups.map((group) => (
-                          <SelectItem key={group.id} value={group.id.toString()} className="text-xs">
-                            {group.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {/* 原始名称 - 第二行 */}
-                  <div>
-                    <div className="flex items-center gap-1 mb-1">
-                      <Label htmlFor="fieldName" className="text-xs text-gray-500">原始名称</Label>
-                      {editingField && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="text-xs text-gray-400 cursor-help">（不可修改）</span>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            <p>原始名称用于标识字段，创建后不可修改。</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
-                    <Input
-                      id="fieldName"
-                      value={formData.fieldName}
-                      onChange={(e) => {
-                        // 新建模式下：原始名称变化时，显示名称自动同步
-                        if (!editingField) {
+                  {/* 两列布局 */}
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    {/* 分组 - 第一行左 */}
+                    <div>
+                      <Label htmlFor="group" className="text-xs text-gray-500 mb-1 block">分组</Label>
+                      <Select
+                        value={formData.group}
+                        onValueChange={(value) => {
+                          const maxRowIndex = calculateMaxRowIndex(value)
                           setFormData({
                             ...formData,
-                            fieldName: e.target.value,
-                            displayName: e.target.value, // 自动同步显示名称
-                            fieldCode: generateFieldCode(e.target.value)
+                            group: value,
+                            rowIndex: maxRowIndex + 1
                           })
-                        }
-                      }}
-                      readOnly={!!editingField}
-                      className={`h-8 text-xs w-full max-w-[300px] ${editingField ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed' : 'bg-white border-gray-200'}`}
-                      required
-                    />
-                  </div>
-                  {/* 显示名称 - 第三行 */}
-                  <div>
-                    <Label htmlFor="displayName" className="text-xs text-gray-500 mb-1 block">显示名称</Label>
-                    <Input
-                      id="displayName"
-                      value={formData.displayName}
-                      onChange={(e) => {
-                        setFormData({ 
-                          ...formData, 
-                          displayName: e.target.value,
-                        })
-                      }}
-                      placeholder="商品列表、表单中显示的名称"
-                      className="h-8 text-xs bg-white border-gray-200 w-full max-w-[300px]"
-                    />
-                  </div>
-                  {/* 数据库字段名 - 第四行 */}
-                  <div>
-                    <div className="flex items-center gap-1 mb-1">
-                      <Label htmlFor="fieldCode" className="text-xs text-gray-500">数据库字段名</Label>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="text-xs text-gray-400 cursor-help">（自动生成）</span>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p>数据库字段名用于存储商品数据，自动生成不可修改。</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                    <Input
-                      id="fieldCode"
-                      value={formData.fieldCode}
-                      readOnly
-                      className="h-8 text-xs bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed w-full max-w-[300px]"
-                    />
-                  </div>
-                  {/* 字段类型 - 第五行 */}
-                  <div>
-                    <Label htmlFor="fieldType" className="text-xs text-gray-500 mb-1 block">字段类型</Label>
-                    <Select
-                      value={formData.fieldType}
-                      onValueChange={(value) => {
-                        setFormData({ ...formData, fieldType: value, dataSource: 'manual' })
-                        if (value === 'select') {
-                          fetchSuppliers()
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full max-w-[300px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="text" className="text-xs">文本</SelectItem>
-                        <SelectItem value="textarea" className="text-xs">文本多行</SelectItem>
-                        <SelectItem value="number" className="text-xs">数字</SelectItem>
-                        <SelectItem value="select" className="text-xs">单选</SelectItem>
-                        <SelectItem value="boolean" className="text-xs">布尔值</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* 布尔值默认值配置 */}
-                {formData.fieldType === 'boolean' && (
-                  <div className="bg-gray-50/80 rounded-md p-2.5 space-y-2">
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600">
-                      <ToggleRight className="h-3.5 w-3.5" />
-                      默认值配置
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-500 mb-1 block">默认值</Label>
-                      <Select
-                        value={formData.defaultValue}
-                        onValueChange={(value) => setFormData({ ...formData, defaultValue: value })}
+                        }}
                       >
-                        <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full max-w-[200px]">
-                          <SelectValue placeholder="选择默认值" />
+                        <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full">
+                          <SelectValue placeholder="选择分组" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none" className="text-xs">无默认值</SelectItem>
-                          <SelectItem value="true" className="text-xs">是 (true)</SelectItem>
-                          <SelectItem value="false" className="text-xs">否 (false)</SelectItem>
+                          {groups.map((group) => (
+                            <SelectItem key={group.id} value={group.id.toString()} className="text-xs">
+                              {group.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
+                    {/* 原始名称 - 第一行右 */}
+                    <div>
+                      <div className="flex items-center gap-1 mb-1">
+                        <Label htmlFor="fieldName" className="text-xs text-gray-500">原始名称</Label>
+                        {editingField && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-xs text-gray-400 cursor-help">（不可修改）</span>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p>原始名称用于标识字段，创建后不可修改。</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                      <Input
+                        id="fieldName"
+                        value={formData.fieldName}
+                        onChange={(e) => {
+                          // 新建模式下：原始名称变化时，显示名称自动同步
+                          if (!editingField) {
+                            setFormData({
+                              ...formData,
+                              fieldName: e.target.value,
+                              displayName: e.target.value, // 自动同步显示名称
+                              fieldCode: generateFieldCode(e.target.value)
+                            })
+                          }
+                        }}
+                        readOnly={!!editingField}
+                        className={`h-8 text-xs w-full ${editingField ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed' : 'bg-white border-gray-200'}`}
+                        required
+                      />
+                    </div>
+                    {/* 显示名称 - 第二行左 */}
+                    <div>
+                      <Label htmlFor="displayName" className="text-xs text-gray-500 mb-1 block">显示名称</Label>
+                      <Input
+                        id="displayName"
+                        value={formData.displayName}
+                        onChange={(e) => {
+                          setFormData({ 
+                            ...formData, 
+                            displayName: e.target.value,
+                          })
+                        }}
+                        placeholder="商品列表、表单中显示的名称"
+                        className="h-8 text-xs bg-white border-gray-200 w-full"
+                      />
+                    </div>
+                    {/* 数据库字段名 - 第二行右 */}
+                    <div>
+                      <div className="flex items-center gap-1 mb-1">
+                        <Label htmlFor="fieldCode" className="text-xs text-gray-500">数据库字段名</Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-xs text-gray-400 cursor-help">（自动生成）</span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>数据库字段名用于存储商品数据，自动生成不可修改。</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <Input
+                        id="fieldCode"
+                        value={formData.fieldCode}
+                        readOnly
+                        className="h-8 text-xs bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed w-full"
+                      />
+                    </div>
+                    {/* 字段类型 - 第三行左 */}
+                    <div>
+                      <Label htmlFor="fieldType" className="text-xs text-gray-500 mb-1 block">字段类型</Label>
+                      <Select
+                        value={formData.fieldType}
+                        onValueChange={(value) => {
+                          setFormData({ ...formData, fieldType: value, dataSource: 'manual' })
+                          if (value === 'select') {
+                            fetchSuppliers()
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="text" className="text-xs">文本</SelectItem>
+                          <SelectItem value="textarea" className="text-xs">文本多行</SelectItem>
+                          <SelectItem value="number" className="text-xs">数字</SelectItem>
+                          <SelectItem value="select" className="text-xs">单选</SelectItem>
+                          <SelectItem value="boolean" className="text-xs">布尔值</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* 默认值 - 第三行右（仅布尔值类型时显示） */}
+                    <div>
+                      {formData.fieldType === 'boolean' ? (
+                        <>
+                          <Label className="text-xs text-gray-500 mb-1 block">默认值</Label>
+                          <Select
+                            value={formData.defaultValue}
+                            onValueChange={(value) => setFormData({ ...formData, defaultValue: value })}
+                          >
+                            <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full">
+                              <SelectValue placeholder="选择默认值" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none" className="text-xs">无默认值</SelectItem>
+                              <SelectItem value="true" className="text-xs">是 (true)</SelectItem>
+                              <SelectItem value="false" className="text-xs">否 (false)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </>
+                      ) : (
+                        <div className="invisible">
+                          <Label className="text-xs text-gray-500 mb-1 block">占位</Label>
+                          <div className="h-8"></div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
+                </div>
 
                 {/* 单选选项配置 */}
                 {formData.fieldType === 'select' && (
