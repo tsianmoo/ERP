@@ -113,6 +113,32 @@ export default function EditProductPage() {
     }
   }, [params.id])
 
+  // 当 sizeGroups 加载完成后，更新 productSizes 的完整信息
+  useEffect(() => {
+    if (sizeGroups.length > 0 && selectedSizeIds.length > 0) {
+      // 从 sizeGroups 中找到对应的尺码信息
+      const sizeDetails: any[] = []
+      selectedSizeIds.forEach(sizeId => {
+        sizeGroups.forEach(group => {
+          const size = group.size_values?.find((s: any) => s.id === sizeId)
+          if (size) {
+            sizeDetails.push({
+              id: size.id,
+              name: size.name,
+              code: size.code,
+              groupId: group.id,
+              groupName: group.name,
+              groupCode: group.code
+            })
+          }
+        })
+      })
+      if (sizeDetails.length > 0) {
+        setProductSizes(sizeDetails)
+      }
+    }
+  }, [sizeGroups, selectedSizeIds])
+
   // 根据条码规则生成条码
   const generateBarcode = (
     productCode: string,
@@ -179,8 +205,14 @@ export default function EditProductPage() {
         // 设置完整的颜色选择信息
         // Java后端返回的是 colors_data，需要从中提取 selectedColorDetails
         if (product.colors_data && product.colors_data.length > 0) {
-          setSelectedColorDetails(product.colors_data)
-          setSelectedColors(product.colors_data.map((c: SelectedColor) => c.colorValueId))
+          // 为每个颜色添加 id 字段（如果缺失），使用 colorValueId 或索引
+          const colorsWithId = product.colors_data.map((c: any, index: number) => ({
+            ...c,
+            id: c.id || c.colorValueId || Date.now() + index
+          }))
+          setSelectedColorDetails(colorsWithId)
+          setSelectedColors(colorsWithId.map((c: any) => c.colorValueId))
+          setProductColors(colorsWithId)
         }
 
         // 设置选中的尺码ID列表
@@ -188,15 +220,12 @@ export default function EditProductPage() {
         if (product.sizes_data && product.sizes_data.length > 0) {
           setSelectedSizeIds(product.sizes_data)
           setSelectedSizes(product.sizes_data)
-        }
-
-        // 存储商品的颜色和尺码信息（用于SKU组合和尺码显示）
-        // Java后端返回的是 colors_data 和 sizes_data
-        if (product.colors_data && product.colors_data.length > 0) {
-          setProductColors(product.colors_data)
-        }
-        if (product.sizes_data && product.sizes_data.length > 0) {
-          setProductSizes(product.sizes_data)
+          // sizes_data 可能是 ID 数组或对象数组
+          if (typeof product.sizes_data[0] === 'number') {
+            setProductSizes(product.sizes_data.map((id: number) => ({ id })))
+          } else {
+            setProductSizes(product.sizes_data)
+          }
         }
       }
     } catch (error) {

@@ -88,6 +88,32 @@ export default function ViewProductPage() {
     }
   }, [params.id])
 
+  // 当 sizeGroups 加载完成后，更新 productSizes 的完整信息
+  useEffect(() => {
+    if (sizeGroups.length > 0 && selectedSizeIds.length > 0) {
+      // 从 sizeGroups 中找到对应的尺码信息
+      const sizeDetails: any[] = []
+      selectedSizeIds.forEach(sizeId => {
+        sizeGroups.forEach(group => {
+          const size = group.size_values?.find((s: any) => s.id === sizeId)
+          if (size) {
+            sizeDetails.push({
+              id: size.id,
+              name: size.name,
+              code: size.code,
+              groupId: group.id,
+              groupName: group.name,
+              groupCode: group.code
+            })
+          }
+        })
+      })
+      if (sizeDetails.length > 0) {
+        setProductSizes(sizeDetails)
+      }
+    }
+  }, [sizeGroups, selectedSizeIds])
+
   // 根据条码规则生成条码
   const generateBarcode = (
     productCode: string,
@@ -154,22 +180,27 @@ export default function ViewProductPage() {
         // 设置完整的颜色选择信息
         // Java后端返回的是 colors_data，需要从中提取 selectedColorDetails
         if (product.colors_data && product.colors_data.length > 0) {
-          setSelectedColorDetails(product.colors_data)
+          // 为每个颜色添加 id 字段（如果缺失），使用 colorValueId 或索引
+          const colorsWithId = product.colors_data.map((c: any, index: number) => ({
+            ...c,
+            id: c.id || c.colorValueId || Date.now() + index
+          }))
+          setSelectedColorDetails(colorsWithId)
+          setProductColors(colorsWithId)
         }
 
         // 设置选中的尺码ID列表
         // Java后端返回的是 sizes_data，直接作为ID列表使用
         if (product.sizes_data && product.sizes_data.length > 0) {
           setSelectedSizeIds(product.sizes_data)
-        }
-
-        // 存储商品的颜色和尺码信息（用于SKU组合）
-        // Java后端返回的是 colors_data 和 sizes_data
-        if (product.colors_data && product.colors_data.length > 0) {
-          setProductColors(product.colors_data)
-        }
-        if (product.sizes_data && product.sizes_data.length > 0) {
-          setProductSizes(product.sizes_data)
+          // sizes_data 可能是 ID 数组或对象数组
+          // 如果是 ID 数组，需要从 sizeGroups 获取完整信息（在 fetchSizes 后处理）
+          if (typeof product.sizes_data[0] === 'number') {
+            // 暂时存储 ID 数组，等待 sizeGroups 加载后转换
+            setProductSizes(product.sizes_data.map((id: number) => ({ id })))
+          } else {
+            setProductSizes(product.sizes_data)
+          }
         }
       }
     } catch (error) {
