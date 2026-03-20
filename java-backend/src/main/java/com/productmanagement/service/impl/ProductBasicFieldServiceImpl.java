@@ -174,9 +174,8 @@ public class ProductBasicFieldServiceImpl implements ProductBasicFieldService {
         if (request.getGroupSortOrder() != null) {
             field.setGroupSortOrder(request.getGroupSortOrder());
         }
-        if (request.getDefaultValue() != null) {
-            field.setDefaultValue(request.getDefaultValue());
-        }
+        // defaultValue 允许设置为 null 来清除默认值
+        field.setDefaultValue(request.getDefaultValue());
         
         ProductBasicField updatedField = fieldRepository.save(field);
         log.info("更新字段成功，ID: {}", updatedField.getId());

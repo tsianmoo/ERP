@@ -338,7 +338,7 @@ export default function BasicInfoPage() {
     fieldType: 'text',
     isRequired: false,
     options: '',
-    defaultValue: '', // 默认值（布尔值: 'true'/'false', 单选: option value）
+    defaultValue: 'none', // 默认值（布尔值: 'none'表示无默认值, 'true'/'false'表示具体值）
     enabled: true,
     group: '',
     autoGenerate: false, // 是否自动生成
@@ -1075,7 +1075,7 @@ export default function BasicInfoPage() {
         fieldType: formData.fieldType,
         isRequired: formData.isRequired,
         options,
-        defaultValue: formData.defaultValue || null,
+        defaultValue: formData.defaultValue === 'none' ? null : formData.defaultValue,
         enabled: formData.enabled,
         group: formData.group,
         autoGenerate: formData.autoGenerate,
@@ -1245,7 +1245,7 @@ export default function BasicInfoPage() {
             .map((opt: any) => `${opt.label}:${opt.value}`)
             .join('\n')
         : '',
-      defaultValue: field.default_value || '',
+      defaultValue: field.default_value || 'none',
       enabled: field.enabled !== undefined ? field.enabled : true,
       group: field.group_id?.toString() || '',
       autoGenerate: field.auto_generate || false,
@@ -2260,7 +2260,7 @@ export default function BasicInfoPage() {
                           <SelectValue placeholder="选择默认值" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="" className="text-xs">无默认值</SelectItem>
+                          <SelectItem value="none" className="text-xs">无默认值</SelectItem>
                           <SelectItem value="true" className="text-xs">是 (true)</SelectItem>
                           <SelectItem value="false" className="text-xs">否 (false)</SelectItem>
                         </SelectContent>
