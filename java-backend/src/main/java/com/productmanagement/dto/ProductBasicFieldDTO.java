@@ -33,6 +33,7 @@ public class ProductBasicFieldDTO {
     private Integer groupId;
     private Boolean autoGenerate;
     private Integer codeRuleId;
+    private String defaultValue;
     private FieldGroupDTO fieldGroup;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;

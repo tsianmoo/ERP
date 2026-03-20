@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
       field_type: body.fieldType,
       is_required: body.isRequired || false,
       options: body.options,
+      default_value: body.defaultValue,
       sort_order: body.sortOrder || 0,
       enabled: body.enabled !== undefined ? body.enabled : true,
       group_id: body.group ? parseInt(body.group) : null,

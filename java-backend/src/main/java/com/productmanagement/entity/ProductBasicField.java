@@ -75,6 +75,9 @@ public class ProductBasicField {
     @Column(name = "code_rule_id")
     private Integer codeRuleId;
     
+    @Column(name = "default_value")
+    private String defaultValue;
+    
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
     

@@ -17,6 +17,7 @@ export async function PUT(
       field_type: body.fieldType,
       is_required: body.isRequired,
       options: body.options,
+      default_value: body.defaultValue,
       sort_order: body.sortOrder,
       enabled: body.enabled,
       group_id: body.group ? parseInt(body.group) : null,

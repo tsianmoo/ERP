@@ -107,6 +107,7 @@ public class ProductBasicFieldServiceImpl implements ProductBasicFieldService {
         field.setRowIndex(request.getRowIndex());
         field.setNewRow(request.getNewRow());
         field.setGroupSortOrder(request.getGroupSortOrder());
+        field.setDefaultValue(request.getDefaultValue());
         
         ProductBasicField savedField = fieldRepository.save(field);
         log.info("创建字段成功，ID: {}", savedField.getId());
@@ -172,6 +173,9 @@ public class ProductBasicFieldServiceImpl implements ProductBasicFieldService {
         }
         if (request.getGroupSortOrder() != null) {
             field.setGroupSortOrder(request.getGroupSortOrder());
+        }
+        if (request.getDefaultValue() != null) {
+            field.setDefaultValue(request.getDefaultValue());
         }
         
         ProductBasicField updatedField = fieldRepository.save(field);
@@ -264,6 +268,7 @@ public class ProductBasicFieldServiceImpl implements ProductBasicFieldService {
                 .groupId(field.getGroupId())
                 .autoGenerate(field.getAutoGenerate())
                 .codeRuleId(field.getCodeRuleId())
+                .defaultValue(field.getDefaultValue())
                 .fieldGroup(fieldGroupDTO)
                 .createdAt(field.getCreatedAt())
                 .updatedAt(field.getUpdatedAt())

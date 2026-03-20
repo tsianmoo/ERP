@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { Plus, Edit, Trash2, ChevronUp, ChevronDown, Loader2, Search, Settings2, GripHorizontal, Type, List, Maximize2, Move, Hash, Zap, LayoutGrid, Play, GripVertical } from 'lucide-react'
+import { Plus, Edit, Trash2, ChevronUp, ChevronDown, Loader2, Search, Settings2, GripHorizontal, Type, List, Maximize2, Move, Hash, Zap, LayoutGrid, Play, GripVertical, ToggleRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -46,6 +46,7 @@ interface BasicField {
   field_type: string
   is_required: boolean
   options: any
+  default_value: string | null  // 默认值（布尔值: 'true'/'false', 单选: option value）
   sort_order: number
   enabled: boolean
   group_name: string | null
@@ -337,6 +338,7 @@ export default function BasicInfoPage() {
     fieldType: 'text',
     isRequired: false,
     options: '',
+    defaultValue: '', // 默认值（布尔值: 'true'/'false', 单选: option value）
     enabled: true,
     group: '',
     autoGenerate: false, // 是否自动生成
@@ -1073,6 +1075,7 @@ export default function BasicInfoPage() {
         fieldType: formData.fieldType,
         isRequired: formData.isRequired,
         options,
+        defaultValue: formData.defaultValue || null,
         enabled: formData.enabled,
         group: formData.group,
         autoGenerate: formData.autoGenerate,
@@ -1242,6 +1245,7 @@ export default function BasicInfoPage() {
             .map((opt: any) => `${opt.label}:${opt.value}`)
             .join('\n')
         : '',
+      defaultValue: field.default_value || '',
       enabled: field.enabled !== undefined ? field.enabled : true,
       group: field.group_id?.toString() || '',
       autoGenerate: field.auto_generate || false,
@@ -1287,6 +1291,7 @@ export default function BasicInfoPage() {
       fieldType: 'text',
       isRequired: false,
       options: '',
+      defaultValue: '',
       enabled: true,
       group: '',
       autoGenerate: false,
@@ -2237,6 +2242,32 @@ export default function BasicInfoPage() {
                     <div></div>
                   </div>
                 </div>
+
+                {/* 布尔值默认值配置 */}
+                {formData.fieldType === 'boolean' && (
+                  <div className="bg-gray-50/80 rounded-md p-2.5 space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600">
+                      <ToggleRight className="h-3.5 w-3.5" />
+                      默认值配置
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-500 mb-1 block">默认值</Label>
+                      <Select
+                        value={formData.defaultValue}
+                        onValueChange={(value) => setFormData({ ...formData, defaultValue: value })}
+                      >
+                        <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full max-w-[200px]">
+                          <SelectValue placeholder="选择默认值" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="" className="text-xs">无默认值</SelectItem>
+                          <SelectItem value="true" className="text-xs">是 (true)</SelectItem>
+                          <SelectItem value="false" className="text-xs">否 (false)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
 
                 {/* 单选选项配置 */}
                 {formData.fieldType === 'select' && (
