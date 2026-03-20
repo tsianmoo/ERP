@@ -177,23 +177,26 @@ export default function EditProductPage() {
         setBarcodeRule(product.barcodeRule || null)
 
         // 设置完整的颜色选择信息
-        if (product.selectedColorDetails && product.selectedColorDetails.length > 0) {
-          setSelectedColorDetails(product.selectedColorDetails)
-          setSelectedColors(product.selectedColorDetails.map((c: SelectedColor) => c.colorValueId))
+        // Java后端返回的是 colors_data，需要从中提取 selectedColorDetails
+        if (product.colors_data && product.colors_data.length > 0) {
+          setSelectedColorDetails(product.colors_data)
+          setSelectedColors(product.colors_data.map((c: SelectedColor) => c.colorValueId))
         }
 
         // 设置选中的尺码ID列表
-        if (product.selectedSizeIds && product.selectedSizeIds.length > 0) {
-          setSelectedSizeIds(product.selectedSizeIds)
-          setSelectedSizes(product.selectedSizeIds)
+        // Java后端返回的是 sizes_data，直接作为ID列表使用
+        if (product.sizes_data && product.sizes_data.length > 0) {
+          setSelectedSizeIds(product.sizes_data)
+          setSelectedSizes(product.sizes_data)
         }
 
         // 存储商品的颜色和尺码信息（用于SKU组合和尺码显示）
-        if (product.colors && product.colors.length > 0) {
-          setProductColors(product.colors)
+        // Java后端返回的是 colors_data 和 sizes_data
+        if (product.colors_data && product.colors_data.length > 0) {
+          setProductColors(product.colors_data)
         }
-        if (product.sizes && product.sizes.length > 0) {
-          setProductSizes(product.sizes)
+        if (product.sizes_data && product.sizes_data.length > 0) {
+          setProductSizes(product.sizes_data)
         }
       }
     } catch (error) {
