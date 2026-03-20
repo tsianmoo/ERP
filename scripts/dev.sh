@@ -34,15 +34,34 @@ kill_port_if_listening() {
     fi
 }
 
+# 确保 Java 已安装
+ensure_java_installed() {
+    if [[ -x "${JAVA_CMD}" ]]; then
+        echo "Java is already installed at ${JAVA_CMD}"
+        return 0
+    fi
+    
+    echo "Java not found, installing OpenJDK 17..."
+    apt-get update -qq
+    apt-get install -y -qq openjdk-17-jdk
+    
+    if [[ -x "${JAVA_CMD}" ]]; then
+        echo "Java installed successfully at ${JAVA_CMD}"
+        return 0
+    else
+        echo "Warning: Java installation failed, will start frontend only"
+        return 1
+    fi
+}
+
 # 启动 Java 后端服务
 start_java_backend() {
     echo "Starting Java backend service on port 8080..."
     
-    # 检查 Java 是否可用
-    if [[ ! -x "${JAVA_CMD}" ]]; then
-        echo "ERROR: Java not found at ${JAVA_CMD}"
-        echo "Please install Java 17 first"
-        return 1
+    # 确保 Java 已安装
+    if ! ensure_java_installed; then
+        echo "Cannot start Java backend, continuing with frontend only..."
+        return 0
     fi
     
     # 检查 JAR 文件是否存在
