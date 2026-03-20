@@ -1422,54 +1422,106 @@ export default function BasicInfoPage() {
   const moveFieldUp = async (index: number) => {
     if (index <= 0) return
 
-    const newFields = [...fields]
-    const temp = newFields[index]
-    newFields[index] = newFields[index - 1]
-    newFields[index - 1] = temp
+    // 使用 filteredFields 来确定要移动的字段
+    const currentField = filteredFields[index]
+    const prevField = filteredFields[index - 1]
+    
+    if (!currentField || !prevField) return
 
-    await updateFieldSortOrders(newFields)
+    // 检查是否在同一分组内
+    if (currentField.group_id !== prevField.group_id) {
+      toast({
+        variant: 'destructive',
+        title: '无法移动',
+        description: '只能在同一分组内调整顺序',
+      })
+      return
+    }
+
+    // 交换 sort_order
+    const currentSortOrder = currentField.sort_order || 0
+    const prevSortOrder = prevField.sort_order || 0
+
+    try {
+      // 更新两个字段的排序
+      await Promise.all([
+        fetch(`/api/products/basic-fields/${currentField.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sortOrder: prevSortOrder,
+          }),
+        }),
+        fetch(`/api/products/basic-fields/${prevField.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sortOrder: currentSortOrder,
+          }),
+        }),
+      ])
+      
+      fetchFields()
+      toast({
+        title: '排序已更新',
+      })
+    } catch (error) {
+      console.error('更新字段排序失败:', error)
+      toast({
+        variant: 'destructive',
+        title: '排序失败',
+        description: '请重试',
+      })
+    }
   }
 
   // 字段下移
   const moveFieldDown = async (index: number) => {
-    if (index >= fields.length - 1) return
+    if (index >= filteredFields.length - 1) return
 
-    const newFields = [...fields]
-    const temp = newFields[index]
-    newFields[index] = newFields[index + 1]
-    newFields[index + 1] = temp
+    // 使用 filteredFields 来确定要移动的字段
+    const currentField = filteredFields[index]
+    const nextField = filteredFields[index + 1]
+    
+    if (!currentField || !nextField) return
 
-    await updateFieldSortOrders(newFields)
-  }
+    // 检查是否在同一分组内
+    if (currentField.group_id !== nextField.group_id) {
+      toast({
+        variant: 'destructive',
+        title: '无法移动',
+        description: '只能在同一分组内调整顺序',
+      })
+      return
+    }
 
-  // 更新字段排序
-  const updateFieldSortOrders = async (newFields: BasicField[]) => {
+    // 交换 sort_order
+    const currentSortOrder = currentField.sort_order || 0
+    const nextSortOrder = nextField.sort_order || 0
+
     try {
-      await Promise.all(
-        newFields.map((field, index) =>
-          fetch(`/api/products/basic-fields/${field.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fieldName: field.field_name,
-              fieldCode: field.field_code,
-              fieldType: field.field_type,
-              isRequired: field.is_required,
-              options: field.options,
-              enabled: field.enabled,
-              width: field.width,
-              columns: field.columns,
-              columnWidth: field.column_width,
-              spacing: field.spacing,
-              rowIndex: field.row_index,
-              newRow: field.new_row,
-              groupSortOrder: field.group_sort_order,
-              sortOrder: index,
-            }),
-          })
-        )
-      )
+      // 更新两个字段的排序
+      await Promise.all([
+        fetch(`/api/products/basic-fields/${currentField.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sortOrder: nextSortOrder,
+          }),
+        }),
+        fetch(`/api/products/basic-fields/${nextField.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sortOrder: currentSortOrder,
+          }),
+        }),
+      ])
+      
       fetchFields()
+      toast({
+        title: '排序已更新',
+      })
     } catch (error) {
       console.error('更新字段排序失败:', error)
       toast({
@@ -2678,7 +2730,7 @@ export default function BasicInfoPage() {
                               size="sm"
                               className="h-6 w-6 p-0 text-gray-400 hover:text-gray-700"
                               onClick={() => moveFieldUp(index)}
-                              disabled={index === 0}
+                              disabled={index === 0 || filteredFields[index - 1]?.group_id !== field.group_id}
                             >
                               <ChevronUp className="h-3.5 w-3.5" />
                             </Button>
@@ -2687,7 +2739,7 @@ export default function BasicInfoPage() {
                               size="sm"
                               className="h-6 w-6 p-0 text-gray-400 hover:text-gray-700"
                               onClick={() => moveFieldDown(index)}
-                              disabled={index >= filteredFields.length - 1}
+                              disabled={index >= filteredFields.length - 1 || filteredFields[index + 1]?.group_id !== field.group_id}
                             >
                               <ChevronDown className="h-3.5 w-3.5" />
                             </Button>
