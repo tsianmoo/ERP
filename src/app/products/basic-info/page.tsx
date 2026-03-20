@@ -433,6 +433,7 @@ export default function BasicInfoPage() {
     { key: 'index', label: '序号', flex: 0, width: 50, freezable: false, defaultVisible: true },
     { key: 'group', label: '分组', flex: 2, freezable: true, defaultVisible: true },
     { key: 'fieldName', label: '字段名称', flex: 3, freezable: true, defaultVisible: true },
+    { key: 'displayName', label: '显示名称', flex: 3, freezable: true, defaultVisible: true },
     { key: 'fieldType', label: '类型', flex: 1.5, freezable: false, defaultVisible: true },
     { key: 'width', label: '宽度', flex: 1, freezable: false, defaultVisible: true },
     { key: 'columns', label: '列数', flex: 1, freezable: false, defaultVisible: true },
@@ -2523,6 +2524,7 @@ export default function BasicInfoPage() {
                         {colKey === 'index' && <span>序号</span>}
                         {colKey === 'group' && <span>分组</span>}
                         {colKey === 'fieldName' && <span>字段名称</span>}
+                        {colKey === 'displayName' && <span>显示名称</span>}
                         {colKey === 'fieldType' && <span>类型</span>}
                         {colKey === 'width' && <span>宽度</span>}
                         {colKey === 'columns' && <span>列数</span>}
@@ -2591,6 +2593,9 @@ export default function BasicInfoPage() {
                         )}
                         {colKey === 'fieldName' && (
                           <span className={`text-sm font-medium text-gray-900 px-1 ${allowWrap ? 'break-words' : 'truncate'}`}>{field.field_name}</span>
+                        )}
+                        {colKey === 'displayName' && (
+                          <span className={`text-sm text-gray-700 px-1 ${allowWrap ? 'break-words' : 'truncate'}`}>{field.display_name || field.field_name}</span>
                         )}
                         {colKey === 'fieldType' && (
                           <span className="text-sm text-gray-600">
