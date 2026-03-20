@@ -644,12 +644,26 @@ export default function EditProductPage() {
             {hasError && <p className="text-sm text-red-500">{errorMessage}</p>}
           </div>
         )
-      case 'select':
+      case 'select': {
         // 特殊处理供应商字段：尝试从多个字段名获取值
         let selectValue = basicFieldValues[field.field_code] ?? ''
         if ((selectValue === '' || selectValue === null || selectValue === undefined) && 
             (field.field_code === 'supplier' || field.field_code === 'supplier_id')) {
           selectValue = basicFieldValues.supplier_id || basicFieldValues.supplier || ''
+        }
+        
+        // options 可能是字符串或数组
+        let options: any[] = []
+        if (field.options) {
+          if (typeof field.options === 'string') {
+            try {
+              options = JSON.parse(field.options)
+            } catch {
+              options = []
+            }
+          } else if (Array.isArray(field.options)) {
+            options = field.options
+          }
         }
         
         return (
@@ -664,7 +678,7 @@ export default function EditProductPage() {
                   <SelectValue placeholder={`选择${field.display_name || field.field_name}`} />
                 </SelectTrigger>
                 <SelectContent>
-                  {field.options?.map((opt: any) => (
+                  {options.map((opt: any) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
                     </SelectItem>
@@ -680,6 +694,7 @@ export default function EditProductPage() {
             {hasError && <p className="text-sm text-red-500">{errorMessage}</p>}
           </div>
         )
+      }
       case 'date':
         return (
           <div className="space-y-2">

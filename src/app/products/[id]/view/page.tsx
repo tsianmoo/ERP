@@ -349,14 +349,27 @@ export default function ViewProductPage() {
             className="bg-gray-50"
           />
         )
-      case 'select':
+      case 'select': {
+        // options 可能是字符串或数组
+        let options: any[] = []
+        if (field.options) {
+          if (typeof field.options === 'string') {
+            try {
+              options = JSON.parse(field.options)
+            } catch {
+              options = []
+            }
+          } else if (Array.isArray(field.options)) {
+            options = field.options
+          }
+        }
         return (
           <Select value={value ?? ''} disabled>
             <SelectTrigger className="w-full bg-gray-50">
               <SelectValue placeholder={`选择${field.display_name || field.field_name}`} />
             </SelectTrigger>
             <SelectContent>
-              {field.options?.map((opt: any) => (
+              {options.map((opt: any) => (
                 <SelectItem key={opt.value} value={opt.value}>
                   {opt.label}
                 </SelectItem>
@@ -364,6 +377,7 @@ export default function ViewProductPage() {
             </SelectContent>
           </Select>
         )
+      }
       case 'date':
         return (
           <Input

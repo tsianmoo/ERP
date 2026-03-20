@@ -944,12 +944,27 @@ export default function AddProductPage() {
             {hasError && <p className="text-xs text-red-500">{errorMessage}</p>}
           </div>
         )
-      case 'select':
+      case 'select': {
         // 如果是供应商字段，使用 suppliers 列表作为选项
         const isSupplierField = field.field_code === 'supplier_id' || field.field_code === 'supplier'
+        
+        // 解析 options，可能是字符串或数组
+        let fieldOptions: any[] = []
+        if (field.options) {
+          if (typeof field.options === 'string') {
+            try {
+              fieldOptions = JSON.parse(field.options)
+            } catch {
+              fieldOptions = []
+            }
+          } else if (Array.isArray(field.options)) {
+            fieldOptions = field.options
+          }
+        }
+        
         const selectOptions = isSupplierField 
           ? suppliers.map((s: any) => ({ value: s.id.toString(), label: `${s.supplier_name || s.name} (${s.supplier_code || s.code})` }))
-          : field.options || []
+          : fieldOptions
         
         return (
           <div className="space-y-1">
@@ -971,6 +986,7 @@ export default function AddProductPage() {
             {hasError && <p className="text-xs text-red-500">{errorMessage}</p>}
           </div>
         )
+      }
       case 'date':
         return (
           <div className="space-y-1">
