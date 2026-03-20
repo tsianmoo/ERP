@@ -957,7 +957,7 @@ export default function AddProductPage() {
               value={(basicFieldValues[field.field_code] ?? '').toString()}
               onValueChange={(value) => handleFieldChange(field, value)}
             >
-              <SelectTrigger className={`w-full h-7 text-xs ${hasError ? 'border-red-500' : ''}`}>
+              <SelectTrigger className={`w-full h-7 text-xs py-1 ${hasError ? 'border-red-500' : ''}`}>
                 <SelectValue placeholder={`选择${field.display_name || field.field_name}`} />
               </SelectTrigger>
               <SelectContent>
@@ -1137,7 +1137,7 @@ export default function AddProductPage() {
                             [attr.code]: value,
                           })}
                         >
-                          <SelectTrigger className="w-full h-7 text-xs">
+                          <SelectTrigger className="w-full h-7 text-xs py-1">
                             <SelectValue placeholder={`选择${attr.name}`} />
                           </SelectTrigger>
                           <SelectContent>
@@ -1168,7 +1168,7 @@ export default function AddProductPage() {
                       [attr.code]: value,
                     })}
                   >
-                    <SelectTrigger className="w-full h-7 text-xs">
+                    <SelectTrigger className="w-full h-7 text-xs py-1">
                       <SelectValue placeholder={`选择${attr.name}`} />
                     </SelectTrigger>
                     <SelectContent>
