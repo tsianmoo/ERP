@@ -2131,8 +2131,19 @@ export default function BasicInfoPage() {
                       <Input
                         id="fieldName"
                         value={formData.fieldName}
-                        disabled={!!editingField}
-                        className={`h-8 text-xs ${editingField ? 'bg-gray-100 border-gray-200 text-gray-500' : 'bg-white border-gray-200'} w-full`}
+                        onChange={(e) => {
+                          // 新建模式下：原始名称变化时，显示名称自动同步
+                          if (!editingField) {
+                            setFormData({
+                              ...formData,
+                              fieldName: e.target.value,
+                              displayName: e.target.value, // 自动同步显示名称
+                              fieldCode: generateFieldCode(e.target.value)
+                            })
+                          }
+                        }}
+                        readOnly={!!editingField}
+                        className={`h-8 text-xs ${editingField ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed' : 'bg-white border-gray-200'} w-full`}
                         required
                       />
                     </div>
@@ -2168,8 +2179,8 @@ export default function BasicInfoPage() {
                       <Input
                         id="fieldCode"
                         value={formData.fieldCode}
-                        disabled
-                        className="h-8 text-xs bg-gray-100 border-gray-200 text-gray-500 w-full"
+                        readOnly
+                        className="h-8 text-xs bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed w-full"
                       />
                     </div>
                     <div>
