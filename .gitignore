@@ -97,3 +97,8 @@ Desktop.ini
 .turbo
 
 .coze-logs
+
+# Java build output
+java-backend/target/
+*.jar
+*.class
