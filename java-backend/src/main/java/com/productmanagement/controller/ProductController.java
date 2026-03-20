@@ -83,10 +83,18 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<?> createProduct(@RequestBody CreateProductRequest request) {
         try {
+            log.info("=== 创建商品请求 ===");
+            log.info("basicInfo: {}", request.getBasicInfo());
+            log.info("attributeValues: {}", request.getAttributeValues());
+            log.info("imageUrls: {}", request.getImageUrls());
+            log.info("colors: {}", request.getColors());
+            log.info("sizes: {}", request.getSizes());
+            
             ProductDTO product = productService.createProduct(request);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("data", product));
         } catch (Exception e) {
+            log.error("创建商品失败", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));
         }

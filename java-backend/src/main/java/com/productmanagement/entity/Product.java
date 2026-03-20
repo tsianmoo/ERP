@@ -1,13 +1,17 @@
 package com.productmanagement.entity;
 
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
 import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.Map;
 
+@Slf4j
 @Data
 @Entity
 @Table(name = "products")
@@ -31,7 +35,7 @@ public class Product {
     @Column(name = "attribute_values", columnDefinition = "jsonb")
     private Map<String, Object> attributeValues;
     
-    @JdbcTypeCode(SqlTypes.JSON)
+    @Type(JsonBinaryType.class)
     @Column(name = "image_urls", columnDefinition = "jsonb")
     private Object imageUrls;
     
@@ -44,11 +48,11 @@ public class Product {
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
     
-    @JdbcTypeCode(SqlTypes.JSON)
+    @Type(JsonBinaryType.class)
     @Column(name = "colors_data", columnDefinition = "jsonb")
     private Object colorsData;
     
-    @JdbcTypeCode(SqlTypes.JSON)
+    @Type(JsonBinaryType.class)
     @Column(name = "sizes_data", columnDefinition = "jsonb")
     private Object sizesData;
     
