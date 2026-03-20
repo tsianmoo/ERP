@@ -59,10 +59,28 @@ public class ProductServiceImpl implements ProductService {
         Product product = new Product();
         product.setBasicInfo(request.getBasicInfo());
         product.setAttributeValues(request.getAttributeValues());
-        product.setImageUrls(request.getImageUrls());
         product.setStatus(request.getStatus() != null ? request.getStatus() : "active");
-        product.setColorsData(request.getColors());
-        product.setSizesData(request.getSizes());
+        
+        // 处理 imageUrls 数据：空列表设为 null，避免 JSON 序列化问题
+        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
+            product.setImageUrls(request.getImageUrls());
+        } else {
+            product.setImageUrls(null);
+        }
+        
+        // 处理 colors 数据：空列表设为 null，避免 JSON 序列化问题
+        if (request.getColors() != null && !request.getColors().isEmpty()) {
+            product.setColorsData(request.getColors());
+        } else {
+            product.setColorsData(null);
+        }
+        
+        // 处理 sizes 数据：空列表设为 null，避免 JSON 序列化问题
+        if (request.getSizes() != null && !request.getSizes().isEmpty()) {
+            product.setSizesData(request.getSizes());
+        } else {
+            product.setSizesData(null);
+        }
         
         // 从 basicInfo 中获取 product_code
         if (request.getBasicInfo() != null && request.getBasicInfo().containsKey("product_code")) {
