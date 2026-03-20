@@ -502,10 +502,10 @@ export default function AddProductPage() {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                fieldCode: field.field_code,
-                codeRuleId: field.code_rule_id,
-                basicFieldValues: currentBasicFieldValues,
-                attributeValues: currentAttributeValues,
+                field_code: field.field_code,
+                code_rule_id: field.code_rule_id,
+                basic_field_values: currentBasicFieldValues,
+                attribute_values: currentAttributeValues,
               }),
             })
 
@@ -626,10 +626,10 @@ export default function AddProductPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fieldCode: field.field_code,
-          codeRuleId: field.code_rule_id,
-          basicFieldValues,
-          attributeValues,
+          field_code: field.field_code,
+          code_rule_id: field.code_rule_id,
+          basic_field_values: basicFieldValues,
+          attribute_values: attributeValues,
         }),
       })
     )
@@ -816,10 +816,10 @@ export default function AddProductPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            fieldCode,
-            codeRuleId,
-            basicFieldValues,
-            attributeValues,
+            field_code: fieldCode,
+            code_rule_id: codeRuleId,
+            basic_field_values: basicFieldValues,
+            attribute_values: attributeValues,
           }),
         })
         const result = await response.json()

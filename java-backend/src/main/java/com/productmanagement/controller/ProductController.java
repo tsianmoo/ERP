@@ -1,11 +1,13 @@
 package com.productmanagement.controller;
 
 import com.productmanagement.dto.*;
+import com.productmanagement.service.FieldValueGeneratorService;
 import com.productmanagement.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@Slf4j
 @Tag(name = "商品管理", description = "商品相关接口")
 @RestController
 @RequestMapping("/api/products")
@@ -22,6 +25,34 @@ import java.util.Map;
 public class ProductController {
     
     private final ProductService productService;
+    private final FieldValueGeneratorService fieldValueGeneratorService;
+    
+    @Operation(summary = "生成字段值", description = "根据编码规则生成字段值")
+    @PostMapping("/generate-field-value")
+    public ResponseEntity<?> generateFieldValue(@RequestBody GenerateFieldValueRequest request) {
+        try {
+            log.info("生成字段值请求: fieldCode={}, codeRuleId={}, basicFieldValues={}, attributeValues={}",
+                    request.getFieldCode(), request.getCodeRuleId(), request.getBasicFieldValues(), request.getAttributeValues());
+            
+            if (request.getCodeRuleId() == null) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "codeRuleId 不能为空"));
+            }
+            
+            FieldValueGeneratorService.GenerateFieldValueResult result = fieldValueGeneratorService.generateFieldValue(
+                    request.getCodeRuleId(),
+                    request.getBasicFieldValues(),
+                    request.getAttributeValues()
+            );
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "data", Map.of("value", result.getValue())
+            ));
+        } catch (Exception e) {
+            log.error("生成字段值失败", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
     
     @Operation(summary = "获取商品列表", description = "分页获取商品列表")
     @GetMapping

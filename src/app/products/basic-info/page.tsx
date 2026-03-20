@@ -766,10 +766,10 @@ export default function BasicInfoPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fieldCode: formData.fieldCode,
-          codeRuleId: formData.codeRuleId,
-          basicFieldValues: {}, // 预览时使用空值
-          attributeValues: {}, // 预览时使用空值
+          field_code: formData.fieldCode,
+          code_rule_id: formData.codeRuleId,
+          basic_field_values: {}, // 预览时使用空值
+          attribute_values: {}, // 预览时使用空值
         }),
       })
 
