@@ -14,6 +14,7 @@ import {
   ImageIcon
 } from 'lucide-react'
 import { SystemSettingsDialog } from '@/components/system-settings'
+import { BackendStatusIndicator } from '@/components/common/backend-status'
 
 const navigation = [
   {
@@ -95,6 +96,8 @@ export function Sidebar() {
 
         {/* Footer */}
         <div className="border-t border-gray-100 px-3 py-3 space-y-1">
+          {/* 后端服务状态 */}
+          <BackendStatusIndicator />
           <SystemSettingsDialog />
           <p className="text-xs text-gray-400 text-center pt-1">
             © 2024 服装ERP系统

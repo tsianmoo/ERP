@@ -5,6 +5,15 @@ spring:
   application:
     name: product-management-backend
   
+  # DevTools 热重载配置
+  devtools:
+    restart:
+      enabled: true
+      additional-paths: src/main/java
+      exclude: static/**,public/**
+    livereload:
+      enabled: true
+  
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/postgres}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
@@ -47,3 +56,23 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
+
+# Actuator 健康检查配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    db:
+      enabled: true
+    liveness:
+      enabled: true
+    readiness:
+      enabled: true
