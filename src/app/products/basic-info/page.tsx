@@ -2116,11 +2116,20 @@ export default function BasicInfoPage() {
                         value={formData.fieldName}
                         onChange={(e) => {
                           const newFieldName = e.target.value
-                          setFormData({ 
-                            ...formData, 
-                            fieldName: newFieldName,
-                            fieldCode: generateFieldCode(newFieldName)
-                          })
+                          // 编辑模式下不自动重新生成 field_code，避免历史数据丢失
+                          if (editingField) {
+                            setFormData({ 
+                              ...formData, 
+                              fieldName: newFieldName,
+                            })
+                          } else {
+                            // 新建模式下自动生成 field_code
+                            setFormData({ 
+                              ...formData, 
+                              fieldName: newFieldName,
+                              fieldCode: generateFieldCode(newFieldName)
+                            })
+                          }
                         }}
                         placeholder="例如：是否允许零售"
                         className="h-8 text-xs bg-white border-gray-200 w-full"
@@ -2128,7 +2137,20 @@ export default function BasicInfoPage() {
                       />
                     </div>
                     <div className="col-span-2">
-                      <Label htmlFor="fieldCode" className="text-xs text-gray-500 mb-1 block">数据库字段名</Label>
+                      <div className="flex items-center gap-1 mb-1">
+                        <Label htmlFor="fieldCode" className="text-xs text-gray-500">数据库字段名</Label>
+                        {editingField && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-xs text-amber-500 cursor-help">（不可修改）</span>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p>数据库字段名用于存储商品数据，修改会导致已存储的商品数据无法正确读取。</p>
+                              <p className="mt-1">如需修改，请删除后重新创建字段。</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
                       <Input
                         id="fieldCode"
                         value={formData.fieldCode}
