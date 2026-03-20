@@ -58,7 +58,7 @@ public class FieldValueGeneratorServiceImpl implements FieldValueGeneratorServic
             String type = element.get("type") != null ? String.valueOf(element.get("type")) : null;
             String value = element.get("value") != null ? String.valueOf(element.get("value")) : null;
             
-            if ("text".equals(type)) {
+            if ("fixed".equals(type)) {
                 // 固定文本
                 result.append(value != null ? value : "");
             } else if ("variable".equals(type)) {

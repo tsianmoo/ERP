@@ -1,7 +1,11 @@
 package com.productmanagement.service.impl;
 
 import com.productmanagement.dto.CodeRuleDTO;
+import com.productmanagement.entity.ProductAttribute;
+import com.productmanagement.entity.ProductBasicField;
 import com.productmanagement.entity.ProductCodeRule;
+import com.productmanagement.repository.ProductAttributeRepository;
+import com.productmanagement.repository.ProductBasicFieldRepository;
 import com.productmanagement.repository.ProductCodeRuleRepository;
 import com.productmanagement.service.CodeRuleService;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -18,6 +25,8 @@ import java.util.stream.Collectors;
 public class CodeRuleServiceImpl implements CodeRuleService {
     
     private final ProductCodeRuleRepository repository;
+    private final ProductBasicFieldRepository basicFieldRepository;
+    private final ProductAttributeRepository attributeRepository;
     
     @Override
     public List<CodeRuleDTO> getAllRules() {
@@ -75,6 +84,42 @@ public class CodeRuleServiceImpl implements CodeRuleService {
         }
         repository.deleteById(id);
         log.info("删除编码规则成功，ID: {}", id);
+    }
+    
+    @Override
+    public List<Map<String, String>> getBasicFieldVariables() {
+        List<Map<String, String>> variables = new ArrayList<>();
+        try {
+            List<ProductBasicField> fields = basicFieldRepository.findByEnabledTrueOrderBySortOrderAsc();
+            for (ProductBasicField field : fields) {
+                Map<String, String> variable = new HashMap<>();
+                variable.put("value", field.getFieldCode());
+                variable.put("label", field.getDisplayName() != null ? field.getDisplayName() : field.getFieldName());
+                variable.put("description", "基本字段：" + (field.getDisplayName() != null ? field.getDisplayName() : field.getFieldName()));
+                variables.add(variable);
+            }
+        } catch (Exception e) {
+            log.warn("获取基本字段变量失败: {}", e.getMessage());
+        }
+        return variables;
+    }
+    
+    @Override
+    public List<Map<String, String>> getAttributeVariables() {
+        List<Map<String, String>> variables = new ArrayList<>();
+        try {
+            List<ProductAttribute> attrs = attributeRepository.findByEnabledTrueOrderBySortOrderAsc();
+            for (ProductAttribute attr : attrs) {
+                Map<String, String> variable = new HashMap<>();
+                variable.put("value", attr.getCode());
+                variable.put("label", attr.getName());
+                variable.put("description", "商品属性：" + attr.getName());
+                variables.add(variable);
+            }
+        } catch (Exception e) {
+            log.warn("获取属性变量失败: {}", e.getMessage());
+        }
+        return variables;
     }
     
     @SuppressWarnings("unchecked")
