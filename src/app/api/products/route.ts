@@ -33,14 +33,14 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // 转换请求数据格式以匹配 Java 后端
+    // 转换请求数据格式以匹配 Java 后端 (使用 snake_case 字段名)
     const javaRequest = {
-      basicInfo: body.basicInfo,
-      attributeValues: body.attributeValues,
-      imageUrls: body.imageUrls,
-      colors: body.colors,
-      sizes: body.sizes,
-      status: body.status,
+      basic_info: body.basicInfo || null,
+      attribute_values: body.attributeValues || null,
+      image_urls: body.imageUrls || null,
+      colors: body.colors || null,
+      sizes: body.sizes || null,
+      status: body.status || null,
     };
 
     const result = await productsApi.create(javaRequest);

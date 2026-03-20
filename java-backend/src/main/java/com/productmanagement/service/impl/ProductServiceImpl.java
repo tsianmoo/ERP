@@ -82,9 +82,14 @@ public class ProductServiceImpl implements ProductService {
             product.setSizesData(null);
         }
         
-        // 从 basicInfo 中获取 product_code
-        if (request.getBasicInfo() != null && request.getBasicInfo().containsKey("product_code")) {
-            product.setProductCode(String.valueOf(request.getBasicInfo().get("product_code")));
+        // 从 basicInfo 中获取 product_code 和 product_name
+        if (request.getBasicInfo() != null) {
+            if (request.getBasicInfo().containsKey("product_code")) {
+                product.setProductCode(String.valueOf(request.getBasicInfo().get("product_code")));
+            }
+            if (request.getBasicInfo().containsKey("product_name")) {
+                product.setProductName(String.valueOf(request.getBasicInfo().get("product_name")));
+            }
         }
         
         Product savedProduct = productRepository.save(product);
