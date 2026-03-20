@@ -9,7 +9,16 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const result = await attributeValuesApi.update(parseInt(id), body);
+    
+    // 转换字段名：camelCase -> snake_case
+    const javaRequest = {
+      name: body.name,
+      code: body.code,
+      parent_id: body.parentId,
+      sort_order: body.sortOrder,
+    };
+    
+    const result = await attributeValuesApi.update(parseInt(id), javaRequest);
     
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: result.status });
