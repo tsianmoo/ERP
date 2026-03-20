@@ -830,11 +830,11 @@ export default function AddProductPage() {
           }))
           toast({
             title: '生成成功',
-            description: `${field.field_name}：${result.data.value}`,
+            description: `${field.display_name || field.field_name}：${result.data.value}`,
           })
         }
       } catch (error) {
-        console.error(`生成${field.field_name}失败:`, error)
+        console.error(`生成${field.display_name || field.field_name}失败:`, error)
         toast({
           variant: 'destructive',
           title: '生成失败',
@@ -891,7 +891,7 @@ export default function AddProductPage() {
                   value={(basicFieldValues[field.field_code] ?? '')}
                   onChange={(e) => handleFieldChange(field, e.target.value)}
                   onBlur={() => handleFieldBlur(field)}
-                  placeholder={field.field_name}
+                  placeholder={field.display_name || field.field_name}
                   className={`h-7 text-xs ${hasError ? 'border-red-500' : ''}`}
                 />
               )}
@@ -958,7 +958,7 @@ export default function AddProductPage() {
               onValueChange={(value) => handleFieldChange(field, value)}
             >
               <SelectTrigger className={`w-full h-7 text-xs ${hasError ? 'border-red-500' : ''}`}>
-                <SelectValue placeholder={`选择${field.field_name}`} />
+                <SelectValue placeholder={`选择${field.display_name || field.field_name}`} />
               </SelectTrigger>
               <SelectContent>
                 {selectOptions.map((opt: any) => (
@@ -1050,7 +1050,7 @@ export default function AddProductPage() {
                         }}
                       >
                         <Label htmlFor={`field-${field.id}`} className="text-xs text-gray-600 mb-1 block">
-                          {field.field_name}
+                          {field.display_name || field.field_name}
                           {field.is_required && <span className="text-red-500 ml-0.5">*</span>}
                         </Label>
                         {renderBasicField(field)}
@@ -1064,7 +1064,7 @@ export default function AddProductPage() {
               {fieldsWithNewRow.map((field) => (
                 <div key={`newrow-${field.id}`}>
                   <Label htmlFor={`field-${field.id}`} className="text-xs text-gray-600 mb-1 block">
-                    {field.field_name}
+                    {field.display_name || field.field_name}
                     {field.is_required && <span className="text-red-500 ml-0.5">*</span>}
                   </Label>
                   {renderBasicField(field)}

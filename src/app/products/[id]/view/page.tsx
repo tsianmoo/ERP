@@ -350,7 +350,7 @@ export default function ViewProductPage() {
         return (
           <Select value={value ?? ''} disabled>
             <SelectTrigger className="w-full bg-gray-50">
-              <SelectValue placeholder={`选择${field.field_name}`} />
+              <SelectValue placeholder={`选择${field.display_name || field.field_name}`} />
             </SelectTrigger>
             <SelectContent>
               {field.options?.map((opt: any) => (
@@ -434,7 +434,7 @@ export default function ViewProductPage() {
                           gridColumn: `span ${colSpan}`
                         }}
                       >
-                        <Label>{field.field_name}</Label>
+                        <Label>{field.display_name || field.field_name}</Label>
                         {renderBasicField(field)}
                       </div>
                     )
@@ -445,7 +445,7 @@ export default function ViewProductPage() {
               {/* 渲染需要单独一行的字段 */}
               {fieldsWithNewRow.map((field) => (
                 <div key={`newrow-${field.id}`} className="mt-4">
-                  <Label>{field.field_name}</Label>
+                  <Label>{field.display_name || field.field_name}</Label>
                   {renderBasicField(field)}
                 </div>
               ))}

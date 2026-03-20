@@ -20,6 +20,9 @@ public class ProductBasicField {
     @Column(name = "field_name", nullable = false)
     private String fieldName;
     
+    @Column(name = "display_name")
+    private String displayName;
+    
     @Column(name = "db_field_name")
     private String fieldCode;
     

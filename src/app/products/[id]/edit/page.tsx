@@ -581,7 +581,7 @@ export default function EditProductPage() {
                 readOnly={isAutoGenerate}
                 onChange={(e) => handleFieldChange(field, e.target.value)}
                 onBlur={() => handleFieldBlur(field)}
-                placeholder={field.field_name}
+                placeholder={field.display_name || field.field_name}
                 className={isAutoGenerate ? "bg-gray-50 cursor-not-allowed pr-8" : hasError ? "border-red-500" : ""}
               />
               {isAutoGenerate && (
@@ -602,7 +602,7 @@ export default function EditProductPage() {
                 readOnly={isAutoGenerate}
                 onChange={(e) => handleFieldChange(field, e.target.value)}
                 onBlur={() => handleFieldBlur(field)}
-                placeholder={field.field_name}
+                placeholder={field.display_name || field.field_name}
                 className={`min-h-[80px] ${isAutoGenerate ? "bg-gray-50 cursor-not-allowed" : ""} ${hasError ? "border-red-500" : ""}`}
               />
               {isAutoGenerate && (
@@ -629,7 +629,7 @@ export default function EditProductPage() {
                   handleFieldChange(field, value === '' ? '' : parseFloat(value))
                 }}
                 onBlur={() => handleFieldBlur(field)}
-                placeholder={field.field_name}
+                placeholder={field.display_name || field.field_name}
                 className={isAutoGenerate ? "bg-gray-50 cursor-not-allowed pr-8" : hasError ? "border-red-500" : ""}
               />
               {isAutoGenerate && (
@@ -658,7 +658,7 @@ export default function EditProductPage() {
                 onValueChange={(value) => handleFieldChange(field, value)}
               >
                 <SelectTrigger className={`w-full ${isAutoGenerate ? "bg-gray-50 cursor-not-allowed pr-8" : ""} ${hasError ? "border-red-500" : ""}`}>
-                  <SelectValue placeholder={`选择${field.field_name}`} />
+                  <SelectValue placeholder={`选择${field.display_name || field.field_name}`} />
                 </SelectTrigger>
                 <SelectContent>
                   {field.options?.map((opt: any) => (
@@ -763,7 +763,7 @@ export default function EditProductPage() {
                         }}
                       >
                         <Label htmlFor={`field-${field.id}`}>
-                          {field.field_name}
+                          {field.display_name || field.field_name}
                           {field.is_required && ' *'}
                           {field.auto_generate && (
                             <span className="ml-2 text-xs text-gray-500">(自动生成，编辑时不变)</span>
@@ -780,7 +780,7 @@ export default function EditProductPage() {
               {fieldsWithNewRow.map((field) => (
                 <div key={`newrow-${field.id}`} className="mt-4">
                   <Label htmlFor={`field-${field.id}`}>
-                    {field.field_name}
+                    {field.display_name || field.field_name}
                     {field.is_required && ' *'}
                     {field.auto_generate && (
                       <span className="ml-2 text-xs text-gray-500">(自动生成，编辑时不变)</span>

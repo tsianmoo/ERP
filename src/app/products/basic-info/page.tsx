@@ -41,6 +41,7 @@ import { CSS } from '@dnd-kit/utilities'
 interface BasicField {
   id: number
   field_name: string
+  display_name: string  // 扩展名称（显示名称）
   field_code: string  // 数据库字段名，用于标识货号等特殊字段
   field_type: string
   is_required: boolean
@@ -331,6 +332,7 @@ export default function BasicInfoPage() {
   const [previewLoading, setPreviewLoading] = useState(false) // 预览加载状态
   const [formData, setFormData] = useState({
     fieldName: '',
+    displayName: '', // 扩展名称（显示名称）
     fieldCode: '', // 数据库字段名，用于标识货号等特殊字段
     fieldType: 'text',
     isRequired: false,
@@ -1065,6 +1067,7 @@ export default function BasicInfoPage() {
 
       const payload = {
         fieldName: formData.fieldName,
+        displayName: formData.displayName || formData.fieldName,
         fieldCode: finalFieldCode,
         fieldType: formData.fieldType,
         isRequired: formData.isRequired,
@@ -1228,6 +1231,7 @@ export default function BasicInfoPage() {
     
     setFormData({
       fieldName: field.field_name,
+      displayName: field.display_name || field.field_name,
       fieldCode: field.field_code || '',
       fieldType: field.field_type,
       isRequired: field.is_required,
@@ -1277,6 +1281,7 @@ export default function BasicInfoPage() {
   const resetForm = () => {
     setFormData({
       fieldName: '',
+      displayName: '',
       fieldCode: '',
       fieldType: 'text',
       isRequired: false,
@@ -2108,48 +2113,57 @@ export default function BasicInfoPage() {
                     <Type className="h-3.5 w-3.5" />
                     字段设置
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    <div className="col-span-2">
-                      <Label htmlFor="fieldName" className="text-xs text-gray-500 mb-1 block">字段名称</Label>
-                      <Input
-                        id="fieldName"
-                        value={formData.fieldName}
-                        onChange={(e) => {
-                          const newFieldName = e.target.value
-                          // 编辑模式下不自动重新生成 field_code，避免历史数据丢失
-                          if (editingField) {
-                            setFormData({ 
-                              ...formData, 
-                              fieldName: newFieldName,
-                            })
-                          } else {
-                            // 新建模式下自动生成 field_code
-                            setFormData({ 
-                              ...formData, 
-                              fieldName: newFieldName,
-                              fieldCode: generateFieldCode(newFieldName)
-                            })
-                          }
-                        }}
-                        placeholder="例如：是否允许零售"
-                        className="h-8 text-xs bg-white border-gray-200 w-full"
-                        required
-                      />
-                    </div>
-                    <div className="col-span-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
                       <div className="flex items-center gap-1 mb-1">
-                        <Label htmlFor="fieldCode" className="text-xs text-gray-500">数据库字段名</Label>
+                        <Label htmlFor="fieldName" className="text-xs text-gray-500">原始名称</Label>
                         {editingField && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="text-xs text-amber-500 cursor-help">（不可修改）</span>
+                              <span className="text-xs text-gray-400 cursor-help">（不可修改）</span>
                             </TooltipTrigger>
                             <TooltipContent className="max-w-xs">
-                              <p>数据库字段名用于存储商品数据，修改会导致已存储的商品数据无法正确读取。</p>
-                              <p className="mt-1">如需修改，请删除后重新创建字段。</p>
+                              <p>原始名称用于标识字段，创建后不可修改。</p>
                             </TooltipContent>
                           </Tooltip>
                         )}
+                      </div>
+                      <Input
+                        id="fieldName"
+                        value={formData.fieldName}
+                        disabled={!!editingField}
+                        className={`h-8 text-xs ${editingField ? 'bg-gray-100 border-gray-200 text-gray-500' : 'bg-white border-gray-200'} w-full`}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="displayName" className="text-xs text-gray-500 mb-1 block">显示名称</Label>
+                      <Input
+                        id="displayName"
+                        value={formData.displayName}
+                        onChange={(e) => {
+                          setFormData({ 
+                            ...formData, 
+                            displayName: e.target.value,
+                          })
+                        }}
+                        placeholder="商品列表、表单中显示的名称"
+                        className="h-8 text-xs bg-white border-gray-200 w-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <div className="flex items-center gap-1 mb-1">
+                        <Label htmlFor="fieldCode" className="text-xs text-gray-500">数据库字段名</Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-xs text-gray-400 cursor-help">（自动生成）</span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>数据库字段名用于存储商品数据，自动生成不可修改。</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
                       <Input
                         id="fieldCode"
@@ -2157,6 +2171,29 @@ export default function BasicInfoPage() {
                         disabled
                         className="h-8 text-xs bg-gray-100 border-gray-200 text-gray-500 w-full"
                       />
+                    </div>
+                    <div>
+                      <Label htmlFor="fieldType" className="text-xs text-gray-500 mb-1 block">字段类型</Label>
+                      <Select
+                        value={formData.fieldType}
+                        onValueChange={(value) => {
+                          setFormData({ ...formData, fieldType: value, dataSource: 'manual' })
+                          if (value === 'select') {
+                            fetchSuppliers()
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="text" className="text-xs">文本</SelectItem>
+                          <SelectItem value="textarea" className="text-xs">文本多行</SelectItem>
+                          <SelectItem value="number" className="text-xs">数字</SelectItem>
+                          <SelectItem value="select" className="text-xs">单选</SelectItem>
+                          <SelectItem value="boolean" className="text-xs">布尔值</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -2185,29 +2222,7 @@ export default function BasicInfoPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div>
-                      <Label htmlFor="fieldType" className="text-xs text-gray-500 mb-1 block">字段类型</Label>
-                      <Select
-                        value={formData.fieldType}
-                        onValueChange={(value) => {
-                          setFormData({ ...formData, fieldType: value, dataSource: 'manual' })
-                          if (value === 'select') {
-                            fetchSuppliers()
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="text" className="text-xs">文本</SelectItem>
-                          <SelectItem value="textarea" className="text-xs">文本多行</SelectItem>
-                          <SelectItem value="number" className="text-xs">数字</SelectItem>
-                          <SelectItem value="select" className="text-xs">单选</SelectItem>
-                          <SelectItem value="boolean" className="text-xs">布尔值</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <div></div>
                   </div>
                 </div>
 

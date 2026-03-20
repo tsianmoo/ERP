@@ -90,6 +90,7 @@ public class ProductBasicFieldServiceImpl implements ProductBasicFieldService {
         
         ProductBasicField field = new ProductBasicField();
         field.setFieldName(request.getFieldName());
+        field.setDisplayName(request.getDisplayName() != null ? request.getDisplayName() : request.getFieldName());
         field.setFieldCode(fieldCode);
         field.setFieldType(request.getFieldType());
         field.setIsRequired(request.getIsRequired() != null ? request.getIsRequired() : false);
@@ -120,6 +121,9 @@ public class ProductBasicFieldServiceImpl implements ProductBasicFieldService {
         
         if (request.getFieldName() != null) {
             field.setFieldName(request.getFieldName());
+        }
+        if (request.getDisplayName() != null) {
+            field.setDisplayName(request.getDisplayName());
         }
         if (request.getFieldCode() != null) {
             field.setFieldCode(request.getFieldCode());
@@ -242,6 +246,7 @@ public class ProductBasicFieldServiceImpl implements ProductBasicFieldService {
         return ProductBasicFieldDTO.builder()
                 .id(field.getId())
                 .fieldName(field.getFieldName())
+                .displayName(field.getDisplayName() != null ? field.getDisplayName() : field.getFieldName())
                 .fieldCode(field.getFieldCode())
                 .fieldType(field.getFieldType())
                 .isRequired(field.getIsRequired())

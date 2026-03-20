@@ -29,23 +29,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const javaRequest = {
-      fieldName: body.fieldName,
-      fieldCode: body.fieldCode,
-      fieldType: body.fieldType,
-      isRequired: body.isRequired || false,
+      field_name: body.fieldName,
+      display_name: body.displayName || body.fieldName,
+      field_code: body.fieldCode,
+      field_type: body.fieldType,
+      is_required: body.isRequired || false,
       options: body.options,
-      sortOrder: body.sortOrder || 0,
+      sort_order: body.sortOrder || 0,
       enabled: body.enabled !== undefined ? body.enabled : true,
-      groupId: body.group ? parseInt(body.group) : null,
-      autoGenerate: body.autoGenerate || false,
-      codeRuleId: body.codeRuleId,
+      group_id: body.group ? parseInt(body.group) : null,
+      auto_generate: body.autoGenerate || false,
+      code_rule_id: body.codeRuleId,
       width: body.width || 100,
       columns: body.columns || 1,
-      columnWidth: body.columnWidth || 1,
+      column_width: body.columnWidth || 1,
       spacing: body.spacing || 2,
-      rowIndex: body.rowIndex || 1,
-      newRow: body.newRow || false,
-      groupSortOrder: body.groupSortOrder || 0,
+      row_index: body.rowIndex || 1,
+      new_row: body.newRow || false,
+      group_sort_order: body.groupSortOrder || 0,
     };
 
     const result = await basicFieldsApi.create(javaRequest);
