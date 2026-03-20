@@ -44,13 +44,19 @@ public class FieldValueGeneratorServiceImpl implements FieldValueGeneratorServic
         
         for (Map<String, Object> element : elements) {
             // 检查元素是否启用
-            Boolean enabled = (Boolean) element.get("enabled");
+            Object enabledObj = element.get("enabled");
+            Boolean enabled = null;
+            if (enabledObj instanceof Boolean) {
+                enabled = (Boolean) enabledObj;
+            } else if (enabledObj != null) {
+                enabled = Boolean.valueOf(String.valueOf(enabledObj));
+            }
             if (enabled == null || !enabled) {
                 continue;
             }
             
-            String type = (String) element.get("type");
-            String value = (String) element.get("value");
+            String type = element.get("type") != null ? String.valueOf(element.get("type")) : null;
+            String value = element.get("value") != null ? String.valueOf(element.get("value")) : null;
             
             if ("text".equals(type)) {
                 // 固定文本
@@ -136,13 +142,27 @@ public class FieldValueGeneratorServiceImpl implements FieldValueGeneratorServic
      */
     private String generateSequence(Map<String, Object> element) {
         // 获取流水号配置
-        Integer length = element != null ? (Integer) element.get("sequence_length") : null;
+        Integer length = null;
+        if (element != null && element.get("sequence_length") != null) {
+            Object lengthObj = element.get("sequence_length");
+            if (lengthObj instanceof Number) {
+                length = ((Number) lengthObj).intValue();
+            } else {
+                try {
+                    length = Integer.valueOf(String.valueOf(lengthObj));
+                } catch (NumberFormatException e) {
+                    length = 4;
+                }
+            }
+        }
         if (length == null || length <= 0) {
             length = 4; // 默认4位
         }
         
         // 获取排除的数字
-        String excludedDigits = element != null ? (String) element.get("sequence_excluded_digits") : null;
+        String excludedDigits = element != null && element.get("sequence_excluded_digits") != null 
+            ? String.valueOf(element.get("sequence_excluded_digits")) 
+            : null;
         
         // 使用数据库序列生成
         try {
