@@ -104,10 +104,10 @@ export function ColorSelector({
   useEffect(() => {
     // 只有当 value 发生变化且不为空时才更新
     if (value && value.length > 0) {
-      // 检查 value 是否与之前不同（避免重复更新）
-      const isDifferent = !prevValueRef.current || 
-        prevValueRef.current.length !== value.length ||
-        prevValueRef.current.some((v, i) => v.colorValueId !== value[i]?.colorValueId)
+      // 检查 value 是否与之前不同（比较所有字段，包括 groupName 和 groupCode）
+      const prevJson = prevValueRef.current ? JSON.stringify(prevValueRef.current) : ''
+      const currJson = JSON.stringify(value)
+      const isDifferent = prevJson !== currJson
       
       if (isDifferent) {
         setSelectedColors(value)

@@ -119,41 +119,45 @@ export default function ViewProductPage() {
 
   // 当 colorGroups 加载完成后，更新 selectedColorDetails 的色系信息
   useEffect(() => {
-    // 使用 ref 避免重复更新
+    // colorGroups 还没加载完，跳过
+    if (colorGroups.length === 0) return
+    
+    // selectedColorDetails 还没加载完，跳过
+    if (selectedColorDetails.length === 0) return
+    
+    // 已经更新过，跳过
     if (colorGroupUpdatedRef.current) return
     
-    if (colorGroups.length > 0 && selectedColorDetails.length > 0) {
-      // 检查是否需要补充 groupName 或 groupCode
-      const needsUpdate = selectedColorDetails.some(
-        color => !color.groupName || !color.groupCode
-      )
-      
-      if (needsUpdate) {
-        colorGroupUpdatedRef.current = true
-        const updatedColors = selectedColorDetails.map(color => {
-          // 如果已经有 groupName 和 groupCode，不需要更新
-          if (color.groupName && color.groupCode) {
-            return color
-          }
-          // 从 colorGroups 中查找对应的颜色组
-          for (const group of colorGroups) {
-            const colorValue = group.color_values?.find(
-              (cv: any) => cv.id === color.colorValueId
-            )
-            if (colorValue) {
-              return {
-                ...color,
-                groupId: group.id,
-                groupName: group.name,
-                groupCode: group.code
-              }
+    // 检查是否需要补充 groupName 或 groupCode
+    const needsUpdate = selectedColorDetails.some(
+      color => !color.groupName || !color.groupCode
+    )
+    
+    if (needsUpdate) {
+      colorGroupUpdatedRef.current = true
+      const updatedColors = selectedColorDetails.map(color => {
+        // 如果已经有 groupName 和 groupCode，不需要更新
+        if (color.groupName && color.groupCode) {
+          return color
+        }
+        // 从 colorGroups 中查找对应的颜色组
+        for (const group of colorGroups) {
+          const colorValue = group.color_values?.find(
+            (cv: any) => cv.id === color.colorValueId
+          )
+          if (colorValue) {
+            return {
+              ...color,
+              groupId: group.id,
+              groupName: group.name,
+              groupCode: group.code
             }
           }
-          return color
-        })
-        setSelectedColorDetails(updatedColors)
-        setProductColors(updatedColors)
-      }
+        }
+        return color
+      })
+      setSelectedColorDetails(updatedColors)
+      setProductColors(updatedColors)
     }
   }, [colorGroups, selectedColorDetails])
 
