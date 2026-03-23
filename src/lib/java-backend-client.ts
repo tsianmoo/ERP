@@ -260,6 +260,47 @@ export const supplierBasicFieldsApi = {
   delete: (id: number) => callJavaBackend<unknown>(`/api/suppliers/basic-fields/${id}`, { method: 'DELETE' }),
 };
 
+// 供应商属性分组相关 API
+export const supplierAttributeGroupsApi = {
+  list: () => callJavaBackend<unknown>('/api/supplier-attr-groups'),
+
+  get: (id: number) => callJavaBackend<unknown>(`/api/supplier-attr-groups/${id}`),
+
+  create: (data: unknown) => callJavaBackend<unknown>('/api/supplier-attr-groups', { method: 'POST', body: data }),
+
+  update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/supplier-attr-groups/${id}`, { method: 'PUT', body: data }),
+
+  delete: (id: number) => callJavaBackend<unknown>(`/api/supplier-attr-groups/${id}`, { method: 'DELETE' }),
+};
+
+// 供应商属性相关 API
+export const supplierAttributesApi = {
+  list: () => callJavaBackend<unknown>('/api/supplier-attrs'),
+
+  get: (id: number) => callJavaBackend<unknown>(`/api/supplier-attrs/${id}`),
+
+  create: (data: unknown) => callJavaBackend<unknown>('/api/supplier-attrs', { method: 'POST', body: data }),
+
+  update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/supplier-attrs/${id}`, { method: 'PUT', body: data }),
+
+  delete: (id: number) => callJavaBackend<unknown>(`/api/supplier-attrs/${id}`, { method: 'DELETE' }),
+};
+
+// 供应商属性值相关 API
+export const supplierAttributeValuesApi = {
+  list: () => callJavaBackend<unknown>('/api/supplier-attr-values'),
+
+  getByAttribute: (attributeId: number) => callJavaBackend<unknown>(`/api/supplier-attr-values/attribute/${attributeId}`),
+
+  get: (id: number) => callJavaBackend<unknown>(`/api/supplier-attr-values/${id}`),
+
+  create: (data: unknown) => callJavaBackend<unknown>('/api/supplier-attr-values', { method: 'POST', body: data }),
+
+  update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/supplier-attr-values/${id}`, { method: 'PUT', body: data }),
+
+  delete: (id: number) => callJavaBackend<unknown>(`/api/supplier-attr-values/${id}`, { method: 'DELETE' }),
+};
+
 // 图片相关 API
 export const imagesApi = {
   list: () => callJavaBackend<unknown>('/api/images'),
