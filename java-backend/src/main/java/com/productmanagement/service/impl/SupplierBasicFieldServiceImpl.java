@@ -26,7 +26,7 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
     
     @Override
     public List<SupplierBasicFieldDTO> getEnabledFields() {
-        return repository.findAllByOrderBySortOrderAsc().stream()
+        return repository.findByEnabledTrueOrderBySortOrderAsc().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -43,11 +43,14 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
     public SupplierBasicFieldDTO createField(SupplierBasicFieldDTO request) {
         SupplierBasicField field = new SupplierBasicField();
         field.setFieldName(request.getFieldName());
+        field.setDisplayName(request.getDisplayName());
         field.setFieldCode(request.getFieldCode());
         field.setFieldType(request.getFieldType());
         field.setIsRequired(request.getIsRequired() != null ? request.getIsRequired() : false);
         field.setOptions(request.getOptions());
+        field.setDefaultValue(request.getDefaultValue());
         field.setSortOrder(request.getSortOrder() != null ? request.getSortOrder() : 0);
+        field.setEnabled(request.getEnabled() != null ? request.getEnabled() : true);
         
         SupplierBasicField saved = repository.save(field);
         return toDTO(saved);
@@ -60,11 +63,14 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
                 .orElseThrow(() -> new RuntimeException("供应商字段不存在: " + id));
         
         if (request.getFieldName() != null) field.setFieldName(request.getFieldName());
+        if (request.getDisplayName() != null) field.setDisplayName(request.getDisplayName());
         if (request.getFieldCode() != null) field.setFieldCode(request.getFieldCode());
         if (request.getFieldType() != null) field.setFieldType(request.getFieldType());
         if (request.getIsRequired() != null) field.setIsRequired(request.getIsRequired());
         if (request.getOptions() != null) field.setOptions(request.getOptions());
+        if (request.getDefaultValue() != null) field.setDefaultValue(request.getDefaultValue());
         if (request.getSortOrder() != null) field.setSortOrder(request.getSortOrder());
+        if (request.getEnabled() != null) field.setEnabled(request.getEnabled());
         
         SupplierBasicField saved = repository.save(field);
         return toDTO(saved);
@@ -83,11 +89,14 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
         SupplierBasicFieldDTO dto = new SupplierBasicFieldDTO();
         dto.setId(field.getId());
         dto.setFieldName(field.getFieldName());
+        dto.setDisplayName(field.getDisplayName());
         dto.setFieldCode(field.getFieldCode());
         dto.setFieldType(field.getFieldType());
         dto.setIsRequired(field.getIsRequired());
         dto.setOptions(field.getOptions());
+        dto.setDefaultValue(field.getDefaultValue());
         dto.setSortOrder(field.getSortOrder());
+        dto.setEnabled(field.getEnabled());
         dto.setCreatedAt(field.getCreatedAt());
         dto.setUpdatedAt(field.getUpdatedAt());
         return dto;

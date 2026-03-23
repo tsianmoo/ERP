@@ -19,6 +19,9 @@ public class SupplierBasicField {
     @Column(name = "field_name", nullable = false)
     private String fieldName;
     
+    @Column(name = "display_name")
+    private String displayName;
+    
     @Column(name = "field_code", nullable = false, unique = true)
     private String fieldCode;
     
@@ -32,8 +35,14 @@ public class SupplierBasicField {
     @Column(name = "options", columnDefinition = "jsonb")
     private Object options;
     
+    @Column(name = "default_value")
+    private String defaultValue;
+    
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
+    
+    @Column(name = "enabled")
+    private Boolean enabled = true;
     
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
@@ -46,6 +55,7 @@ public class SupplierBasicField {
         createdAt = OffsetDateTime.now();
         if (isRequired == null) isRequired = false;
         if (sortOrder == null) sortOrder = 0;
+        if (enabled == null) enabled = true;
     }
     
     @PreUpdate
