@@ -52,6 +52,17 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
         field.setSortOrder(request.getSortOrder() != null ? request.getSortOrder() : 0);
         field.setEnabled(request.getEnabled() != null ? request.getEnabled() : true);
         
+        // 分组相关字段
+        field.setWidth(request.getWidth() != null ? request.getWidth() : 100);
+        field.setColumns(request.getColumns() != null ? request.getColumns() : 1);
+        field.setColumnWidth(request.getColumnWidth() != null ? request.getColumnWidth() : 1);
+        field.setSpacing(request.getSpacing() != null ? request.getSpacing() : 2);
+        field.setRowIndex(request.getRowIndex() != null ? request.getRowIndex() : 1);
+        field.setNewRow(request.getNewRow() != null ? request.getNewRow() : false);
+        field.setGroupSortOrder(request.getGroupSortOrder() != null ? request.getGroupSortOrder() : 0);
+        field.setGroupId(request.getGroupId());
+        field.setGroupName(request.getGroupName());
+        
         SupplierBasicField saved = repository.save(field);
         return toDTO(saved);
     }
@@ -72,6 +83,17 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
         if (request.getSortOrder() != null) field.setSortOrder(request.getSortOrder());
         if (request.getEnabled() != null) field.setEnabled(request.getEnabled());
         
+        // 分组相关字段
+        if (request.getWidth() != null) field.setWidth(request.getWidth());
+        if (request.getColumns() != null) field.setColumns(request.getColumns());
+        if (request.getColumnWidth() != null) field.setColumnWidth(request.getColumnWidth());
+        if (request.getSpacing() != null) field.setSpacing(request.getSpacing());
+        if (request.getRowIndex() != null) field.setRowIndex(request.getRowIndex());
+        if (request.getNewRow() != null) field.setNewRow(request.getNewRow());
+        if (request.getGroupSortOrder() != null) field.setGroupSortOrder(request.getGroupSortOrder());
+        if (request.getGroupId() != null) field.setGroupId(request.getGroupId());
+        if (request.getGroupName() != null) field.setGroupName(request.getGroupName());
+        
         SupplierBasicField saved = repository.save(field);
         return toDTO(saved);
     }
@@ -86,19 +108,32 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
     }
     
     private SupplierBasicFieldDTO toDTO(SupplierBasicField field) {
-        SupplierBasicFieldDTO dto = new SupplierBasicFieldDTO();
-        dto.setId(field.getId());
-        dto.setFieldName(field.getFieldName());
-        dto.setDisplayName(field.getDisplayName());
-        dto.setFieldCode(field.getFieldCode());
-        dto.setFieldType(field.getFieldType());
-        dto.setIsRequired(field.getIsRequired());
-        dto.setOptions(field.getOptions());
-        dto.setDefaultValue(field.getDefaultValue());
-        dto.setSortOrder(field.getSortOrder());
-        dto.setEnabled(field.getEnabled());
-        dto.setCreatedAt(field.getCreatedAt());
-        dto.setUpdatedAt(field.getUpdatedAt());
-        return dto;
+        return SupplierBasicFieldDTO.builder()
+                .id(field.getId())
+                .fieldName(field.getFieldName())
+                .displayName(field.getDisplayName())
+                .fieldCode(field.getFieldCode())
+                .fieldType(field.getFieldType())
+                .isRequired(field.getIsRequired())
+                .options(field.getOptions())
+                .defaultValue(field.getDefaultValue())
+                .sortOrder(field.getSortOrder())
+                .enabled(field.getEnabled())
+                .width(field.getWidth())
+                .columns(field.getColumns())
+                .columnWidth(field.getColumnWidth())
+                .spacing(field.getSpacing())
+                .rowIndex(field.getRowIndex())
+                .newRow(field.getNewRow())
+                .groupSortOrder(field.getGroupSortOrder())
+                .groupId(field.getGroupId())
+                .groupName(field.getGroupName())
+                .group(field.getGroup() != null ? SupplierBasicFieldDTO.FieldGroupDTO.builder()
+                        .id(field.getGroup().getId())
+                        .name(field.getGroup().getName())
+                        .build() : null)
+                .createdAt(field.getCreatedAt())
+                .updatedAt(field.getUpdatedAt())
+                .build();
     }
 }

@@ -44,6 +44,37 @@ public class SupplierBasicField {
     @Column(name = "enabled")
     private Boolean enabled = true;
     
+    @Column(name = "width")
+    private Integer width = 100;
+    
+    @Column(name = "columns")
+    private Integer columns = 1;
+    
+    @Column(name = "column_width")
+    private Integer columnWidth = 1;
+    
+    @Column(name = "spacing")
+    private Integer spacing = 2;
+    
+    @Column(name = "row_index")
+    private Integer rowIndex = 1;
+    
+    @Column(name = "new_row")
+    private Boolean newRow = false;
+    
+    @Column(name = "group_sort_order")
+    private Integer groupSortOrder = 0;
+    
+    @Column(name = "group_id")
+    private Integer groupId;
+    
+    @Column(name = "group_name")
+    private String groupName;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id", insertable = false, updatable = false)
+    private SupplierFieldGroup group;
+    
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
     
@@ -56,6 +87,13 @@ public class SupplierBasicField {
         if (isRequired == null) isRequired = false;
         if (sortOrder == null) sortOrder = 0;
         if (enabled == null) enabled = true;
+        if (width == null) width = 100;
+        if (columns == null) columns = 1;
+        if (columnWidth == null) columnWidth = 1;
+        if (spacing == null) spacing = 2;
+        if (rowIndex == null) rowIndex = 1;
+        if (newRow == null) newRow = false;
+        if (groupSortOrder == null) groupSortOrder = 0;
     }
     
     @PreUpdate

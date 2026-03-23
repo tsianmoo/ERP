@@ -260,6 +260,19 @@ export const supplierBasicFieldsApi = {
   delete: (id: number) => callJavaBackend<unknown>(`/api/suppliers/basic-fields/${id}`, { method: 'DELETE' }),
 };
 
+// 供应商字段分组相关 API
+export const supplierFieldGroupsApi = {
+  list: () => callJavaBackend<unknown>('/api/supplier-field-groups'),
+
+  get: (id: number) => callJavaBackend<unknown>(`/api/supplier-field-groups/${id}`),
+
+  create: (data: unknown) => callJavaBackend<unknown>('/api/supplier-field-groups', { method: 'POST', body: data }),
+
+  update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/supplier-field-groups/${id}`, { method: 'PUT', body: data }),
+
+  delete: (id: number) => callJavaBackend<unknown>(`/api/supplier-field-groups/${id}`, { method: 'DELETE' }),
+};
+
 // 供应商属性分组相关 API
 export const supplierAttributeGroupsApi = {
   list: () => callJavaBackend<unknown>('/api/supplier-attr-groups'),
