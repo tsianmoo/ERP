@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { Plus, Edit, Trash2, ChevronUp, ChevronDown, Loader2, Search, GripVertical, Settings2, Type, LayoutGrid } from 'lucide-react'
+import { Plus, Edit, Trash2, ChevronUp, ChevronDown, Loader2, Search, GripVertical, Settings2, Type, Move } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,7 +27,8 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import {
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable
+  useSortable,
+  horizontalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
@@ -107,20 +108,20 @@ function SortableGroupItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-2 border px-3 py-1.5 rounded-sm cursor-pointer transition-colors ${
+      className={`group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border cursor-pointer transition-all ${
         isSelected
-          ? 'bg-blue-50 border-blue-300'
-          : 'bg-white border-gray-200 hover:bg-gray-50'
-      } ${isDragging ? 'shadow-lg' : ''}`}
+          ? 'bg-blue-500 text-white border-blue-500 shadow-sm'
+          : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400 hover:shadow-sm'
+      } ${isDragging ? 'shadow-md' : ''}`}
       onClick={onSelect}
     >
       <div
         {...attributes}
         {...listeners}
-        className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-gray-100 rounded"
+        className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
         onClick={(e) => e.stopPropagation()}
       >
-        <GripVertical className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+        <GripVertical className="h-3.5 w-3.5 text-current" />
       </div>
 
       {isEditing ? (
@@ -138,33 +139,36 @@ function SortableGroupItem({
           onBlur={onEditSubmit}
           onClick={(e) => e.stopPropagation()}
           autoFocus
-          className="w-24 px-1 py-0.5 text-sm border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-20 px-1.5 py-0.5 text-sm border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       ) : (
-        <span className="text-sm text-gray-700">{group.name}</span>
+        <span className="text-sm font-medium">{group.name}</span>
       )}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-5 w-5 p-0 text-gray-400 hover:text-blue-600"
-        onClick={(e) => {
-          e.stopPropagation()
-          onEdit()
-        }}
-      >
-        <Edit className="h-3 w-3" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-5 w-5 p-0 text-gray-400 hover:text-red-600"
-        onClick={(e) => {
-          e.stopPropagation()
-          onDelete()
-        }}
-      >
-        <Trash2 className="h-3 w-3" />
-      </Button>
+      
+      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          variant="ghost"
+          size="sm"
+          className={`h-5 w-5 p-0 ${isSelected ? 'text-white hover:bg-blue-600' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'}`}
+          onClick={(e) => {
+            e.stopPropagation()
+            onEdit()
+          }}
+        >
+          <Edit className="h-3 w-3" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={`h-5 w-5 p-0 ${isSelected ? 'text-white hover:bg-blue-600' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'}`}
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
     </div>
   )
 }
@@ -183,6 +187,13 @@ export default function SupplierBasicInfoPage() {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
   const [editingGroupId, setEditingGroupId] = useState<number | null>(null)
   const [editingGroupName, setEditingGroupName] = useState('')
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [dialogPosition, setDialogPosition] = useState({ x: 0, y: 0 })
+  const [isDraggingDialog, setIsDraggingDialog] = useState(false)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const dragStartPos = useRef({ x: 0, y: 0 })
+  const dialogStartPos = useRef({ x: 0, y: 0 })
+  
   const [formData, setFormData] = useState({
     fieldName: '',
     displayName: '',
@@ -201,6 +212,7 @@ export default function SupplierBasicInfoPage() {
     newRow: false,
     groupSortOrder: 0,
   })
+  
   const { toast } = useToast()
 
   const sensors = useSensors(
@@ -213,6 +225,40 @@ export default function SupplierBasicInfoPage() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
+
+  // 默认列配置
+  const defaultColumns = [
+    { key: 'checkbox', label: '选择', flex: 0, width: 40 },
+    { key: 'index', label: '序号', flex: 0, width: 50 },
+    { key: 'group', label: '分组', flex: 1 },
+    { key: 'fieldName', label: '字段名称', flex: 1.5 },
+    { key: 'displayName', label: '显示名称', flex: 1 },
+    { key: 'fieldType', label: '类型', flex: 0.8 },
+    { key: 'width', label: '宽度', flex: 0.6 },
+    { key: 'columnWidth', label: '列宽', flex: 0.6 },
+    { key: 'rowIndex', label: '行号', flex: 0.6 },
+    { key: 'isRequired', label: '必选', flex: 0.5 },
+    { key: 'enabled', label: '启用', flex: 0.5 },
+    { key: 'newRow', label: '新行', flex: 0.5 },
+    { key: 'sort', label: '排序', flex: 0.8 },
+  ]
+
+  const [columnOrder, setColumnOrder] = useState<string[]>(defaultColumns.map(c => c.key))
+  const [columnSettings, setColumnSettings] = useState([
+    { key: 'checkbox', visible: true },
+    { key: 'index', visible: true },
+    { key: 'group', visible: true },
+    { key: 'fieldName', visible: true },
+    { key: 'displayName', visible: true },
+    { key: 'fieldType', visible: true },
+    { key: 'width', visible: false },
+    { key: 'columnWidth', visible: false },
+    { key: 'rowIndex', visible: false },
+    { key: 'isRequired', visible: true },
+    { key: 'enabled', visible: true },
+    { key: 'newRow', visible: false },
+    { key: 'sort', visible: true },
+  ])
 
   useEffect(() => {
     const loadData = async () => {
@@ -252,7 +298,6 @@ export default function SupplierBasicInfoPage() {
     }
   }
 
-  // 常用词汇映射
   const commonChineseMap: Record<string, string> = {
     '供应商名称': 'supplier_name',
     '联系人': 'contact',
@@ -267,7 +312,6 @@ export default function SupplierBasicInfoPage() {
     '网址': 'website',
   }
 
-  // 自动生成数据库字段名
   const generateFieldCode = (fieldName: string): string => {
     if (!fieldName) return ''
     
@@ -288,39 +332,41 @@ export default function SupplierBasicInfoPage() {
     return result || 'custom_field'
   }
 
-  // 按分组和排序过滤字段
-  const filteredFields = useMemo(() => {
-    let result = [...fields]
-    
-    // 按分组筛选
-    if (selectedGroupId !== null) {
-      result = result.filter(f => f.group_id === selectedGroupId)
-    }
-    
-    // 按搜索词筛选
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      result = result.filter(f => 
-        f.field_name.toLowerCase().includes(query) ||
-        (f.display_name && f.display_name.toLowerCase().includes(query)) ||
-        f.field_code.toLowerCase().includes(query)
-      )
-    }
-    
-    // 排序：先按分组排序，再按字段排序
-    result.sort((a, b) => {
-      const aGroupSort = a.group_sort_order || 0
-      const bGroupSort = b.group_sort_order || 0
-      if (aGroupSort !== bGroupSort) {
-        return aGroupSort - bGroupSort
-      }
-      return a.sort_order - b.sort_order
-    })
-    
-    return result
-  }, [fields, selectedGroupId, searchQuery])
+  const calculateMaxRowIndex = (groupId: string) => {
+    if (!groupId) return 0
+    const groupFields = fields.filter(f => f.group_id === parseInt(groupId))
+    if (groupFields.length === 0) return 0
+    return Math.max(...groupFields.map(f => f.row_index || 1))
+  }
 
-  // 分组拖拽处理
+  const filteredFields = useMemo(() => {
+    return fields
+      .filter(field => {
+        if (selectedGroupId !== null) {
+          if (field.group_id !== selectedGroupId) {
+            return false
+          }
+        }
+
+        if (!searchQuery) return true
+        const query = searchQuery.toLowerCase()
+        return (
+          field.field_name.toLowerCase().includes(query) ||
+          field.field_code.toLowerCase().includes(query)
+        )
+      })
+      .sort((a, b) => {
+        const aGroupSortOrder = groups.find(g => g.id === a.group_id)?.sort_order ?? 999999
+        const bGroupSortOrder = groups.find(g => g.id === b.group_id)?.sort_order ?? 999999
+        if (aGroupSortOrder !== bGroupSortOrder) {
+          return aGroupSortOrder - bGroupSortOrder
+        }
+        const aSortOrder = a.sort_order || 0
+        const bSortOrder = b.sort_order || 0
+        return aSortOrder - bSortOrder
+      })
+  }, [fields, groups, selectedGroupId, searchQuery])
+
   const handleGroupDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
@@ -417,7 +463,6 @@ export default function SupplierBasicInfoPage() {
       const response = await fetch(`/api/suppliers/field-groups/${groupId}`, {
         method: 'DELETE',
       })
-
       if (response.ok) {
         fetchGroups()
         fetchFields()
@@ -486,6 +531,35 @@ export default function SupplierBasicInfoPage() {
       setEditingGroupId(null)
       setEditingGroupName('')
     }
+  }
+
+  const handleDialogDragStart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsDraggingDialog(true)
+    dragStartPos.current = { x: e.clientX, y: e.clientY }
+    dialogStartPos.current = { ...dialogPosition }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - dragStartPos.current.x
+      const deltaY = e.clientY - dragStartPos.current.y
+      setDialogPosition({
+        x: dialogStartPos.current.x + deltaX,
+        y: dialogStartPos.current.y + deltaY,
+      })
+    }
+
+    const handleMouseUp = () => {
+      setIsDraggingDialog(false)
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
+
+  const resetDialogPosition = () => {
+    setDialogPosition({ x: 0, y: 0 })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -610,7 +684,33 @@ export default function SupplierBasicInfoPage() {
     setIsDialogOpen(true)
   }
 
-  // 切换启用状态
+  const handleToggleRequired = async (field: BasicField) => {
+    try {
+      const response = await fetch(`/api/suppliers/basic-fields/${field.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isRequired: !field.is_required,
+        }),
+      })
+      
+      if (response.ok) {
+        fetchFields()
+        toast({
+          title: field.is_required ? '已取消必填' : '已设为必填',
+          description: `字段"${field.field_name}"${field.is_required ? '不再是必填项' : '现在是必填项'}`,
+        })
+      }
+    } catch (error) {
+      console.error('切换必填状态失败:', error)
+      toast({
+        variant: 'destructive',
+        title: '操作失败',
+        description: '请重试',
+      })
+    }
+  }
+
   const handleToggleEnabled = async (field: BasicField) => {
     try {
       const response = await fetch(`/api/suppliers/basic-fields/${field.id}`, {
@@ -638,47 +738,155 @@ export default function SupplierBasicInfoPage() {
     }
   }
 
-  // 上移下移
-  const handleMoveUp = async (field: BasicField, index: number) => {
-    if (index === 0) return
-    
-    const prevField = filteredFields[index - 1]
-    
-    await Promise.all([
-      fetch(`/api/suppliers/basic-fields/${field.id}`, {
+  const handleToggleNewRow = async (field: BasicField) => {
+    try {
+      const response = await fetch(`/api/suppliers/basic-fields/${field.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sort_order: prevField.sort_order }),
-      }),
-      fetch(`/api/suppliers/basic-fields/${prevField.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sort_order: field.sort_order }),
-      }),
-    ])
-    
-    fetchFields()
+        body: JSON.stringify({
+          newRow: !field.new_row,
+        }),
+      })
+
+      if (response.ok) {
+        fetchFields()
+        toast({
+          title: !field.new_row ? '已开启新行' : '已关闭新行',
+          description: `字段 "${field.field_name}" ${!field.new_row ? '将单独占据一行' : '将正常排列'}`,
+        })
+      } else {
+        throw new Error('操作失败')
+      }
+    } catch (error) {
+      console.error('切换新行状态失败:', error)
+      toast({
+        variant: 'destructive',
+        title: '操作失败',
+        description: '请重试',
+      })
+    }
   }
 
-  const handleMoveDown = async (field: BasicField, index: number) => {
-    if (index === filteredFields.length - 1) return
+  const moveFieldUp = async (index: number) => {
+    if (index <= 0) return
+
+    const currentField = filteredFields[index]
+    const prevField = filteredFields[index - 1]
     
+    if (!currentField || !prevField) return
+
+    if (currentField.group_id !== prevField.group_id) {
+      toast({
+        variant: 'destructive',
+        title: '无法移动',
+        description: '只能在同一分组内调整顺序',
+      })
+      return
+    }
+
+    const currentSortOrder = currentField.sort_order || 0
+    const prevSortOrder = prevField.sort_order || 0
+
+    try {
+      await Promise.all([
+        fetch(`/api/suppliers/basic-fields/${currentField.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sortOrder: prevSortOrder,
+          }),
+        }),
+        fetch(`/api/suppliers/basic-fields/${prevField.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sortOrder: currentSortOrder,
+          }),
+        }),
+      ])
+      
+      fetchFields()
+      toast({
+        title: '排序已更新',
+      })
+    } catch (error) {
+      console.error('更新字段排序失败:', error)
+      toast({
+        variant: 'destructive',
+        title: '排序失败',
+        description: '请重试',
+      })
+    }
+  }
+
+  const moveFieldDown = async (index: number) => {
+    if (index >= filteredFields.length - 1) return
+
+    const currentField = filteredFields[index]
     const nextField = filteredFields[index + 1]
     
-    await Promise.all([
-      fetch(`/api/suppliers/basic-fields/${field.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sort_order: nextField.sort_order }),
-      }),
-      fetch(`/api/suppliers/basic-fields/${nextField.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sort_order: field.sort_order }),
-      }),
-    ])
-    
-    fetchFields()
+    if (!currentField || !nextField) return
+
+    if (currentField.group_id !== nextField.group_id) {
+      toast({
+        variant: 'destructive',
+        title: '无法移动',
+        description: '只能在同一分组内调整顺序',
+      })
+      return
+    }
+
+    const currentSortOrder = currentField.sort_order || 0
+    const nextSortOrder = nextField.sort_order || 0
+
+    try {
+      await Promise.all([
+        fetch(`/api/suppliers/basic-fields/${currentField.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sortOrder: nextSortOrder,
+          }),
+        }),
+        fetch(`/api/suppliers/basic-fields/${nextField.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sortOrder: currentSortOrder,
+          }),
+        }),
+      ])
+      
+      fetchFields()
+      toast({
+        title: '排序已更新',
+      })
+    } catch (error) {
+      console.error('更新字段排序失败:', error)
+      toast({
+        variant: 'destructive',
+        title: '排序失败',
+        description: '请重试',
+      })
+    }
+  }
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(filteredFields.map(f => f.id)))
+    } else {
+      setSelectedIds(new Set())
+    }
+  }
+
+  const handleToggleSelect = (id: number) => {
+    const newSelected = new Set(selectedIds)
+    if (newSelected.has(id)) {
+      newSelected.delete(id)
+    } else {
+      newSelected.add(id)
+    }
+    setSelectedIds(newSelected)
   }
 
   const resetForm = () => {
@@ -703,145 +911,235 @@ export default function SupplierBasicInfoPage() {
     setEditingField(null)
   }
 
-  // 字段类型映射
-  const fieldTypeMap: Record<string, string> = {
-    text: '文本',
-    number: '数字',
-    select: '单选',
-    boolean: '布尔值',
-    textarea: '多行文本',
-    date: '日期',
+  const getFieldTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      text: '文本',
+      textarea: '文本多行',
+      number: '数字',
+      select: '单选',
+      boolean: '布尔值',
+      date: '日期',
+    }
+    return labels[type] || type
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-gray-50">
         <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
       </div>
     )
   }
 
   return (
-    <div className="p-8">
+    <div className="min-h-screen bg-gray-50" style={{ padding: 'var(--page-padding)' }}>
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">基本信息管理</h1>
-        <p className="text-gray-600 text-sm">配置供应商基本信息字段，支持分组管理和拖拽排序</p>
+      <div style={{ marginBottom: 'var(--section-gap)' }}>
+        <h1 className="text-2xl font-medium text-gray-900 mb-1">基本信息管理</h1>
       </div>
 
-      <div className="flex gap-6">
-        {/* 左侧分组列表 */}
-        <div className="w-48 flex-shrink-0">
-          <div className="bg-white rounded-lg border border-gray-200 p-3">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-gray-700">分组</span>
-              <Dialog open={isGroupDialogOpen} onOpenChange={setIsGroupDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[400px]">
-                  <DialogHeader>
-                    <DialogTitle>添加分组</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div>
-                      <Label htmlFor="groupName">分组名称</Label>
-                      <Input
-                        id="groupName"
-                        value={newGroupName}
-                        onChange={(e) => setNewGroupName(e.target.value)}
-                        placeholder="请输入分组名称"
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsGroupDialogOpen(false)}>
-                      取消
-                    </Button>
-                    <Button onClick={handleAddGroup} disabled={groupSubmitting}>
-                      {groupSubmitting ? '添加中...' : '添加'}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-            
-            {/* 全部选项 */}
-            <div
-              className={`flex items-center gap-2 border px-3 py-1.5 rounded-sm cursor-pointer transition-colors mb-2 ${
-                selectedGroupId === null
-                  ? 'bg-blue-50 border-blue-300'
-                  : 'bg-white border-gray-200 hover:bg-gray-50'
-              }`}
+      {/* 分组管理 */}
+      <div 
+        className="mb-6 bg-gray-50"
+        style={{ 
+          padding: 'var(--card-padding)',
+          borderRadius: 'var(--card-radius)',
+          borderWidth: 'var(--card-border-width)',
+          borderColor: 'var(--border-color)',
+          borderStyle: 'solid'
+        }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium text-gray-900">分组管理</h3>
+          <Dialog open={isGroupDialogOpen} onOpenChange={(open) => {
+            setIsGroupDialogOpen(open)
+            if (!open) setNewGroupName('')
+          }}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 text-xs">
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                添加分组
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="font-medium">添加分组</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div>
+                  <Label htmlFor="groupName">分组名称</Label>
+                  <Input
+                    id="groupName"
+                    value={newGroupName}
+                    onChange={(e) => setNewGroupName(e.target.value)}
+                    placeholder="例如：基本信息"
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddGroup()}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => setIsGroupDialogOpen(false)}>
+                  取消
+                </Button>
+                <Button onClick={handleAddGroup} disabled={groupSubmitting}>
+                  {groupSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  添加
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+        {groups.length === 0 ? (
+          <p className="text-sm text-gray-400">暂无分组，点击上方按钮添加</p>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleGroupDragEnd}
+          >
+            <SortableContext
+              items={groups.map(g => g.id.toString())}
+              strategy={horizontalListSortingStrategy}
+            >
+              <div className="flex flex-wrap gap-2">
+                {groups.map((group) => (
+                  <SortableGroupItem
+                    key={group.id}
+                    group={group}
+                    isSelected={selectedGroupId === group.id}
+                    isEditing={editingGroupId === group.id}
+                    editingName={editingGroupName}
+                    onSelect={() => handleGroupFilter(group.id)}
+                    onEdit={() => {
+                      setEditingGroupId(group.id)
+                      setEditingGroupName(group.name)
+                    }}
+                    onDelete={() => handleDeleteGroup(group.id, group.name)}
+                    onEditChange={setEditingGroupName}
+                    onEditSubmit={() => handleUpdateGroupName(group.id, editingGroupName)}
+                    onEditCancel={() => {
+                      setEditingGroupId(null)
+                      setEditingGroupName('')
+                    }}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        )}
+        {selectedGroupId !== null && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-xs text-gray-500">
+              已筛选分组：
+              <span className="font-medium text-gray-700">
+                {groups.find(g => g.id === selectedGroupId)?.name}
+              </span>
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700"
               onClick={() => setSelectedGroupId(null)}
             >
-              <span className="text-sm text-gray-700">全部</span>
-            </div>
-
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleGroupDragEnd}>
-              <SortableContext items={groups.map(g => g.id.toString())}>
-                <div className="space-y-1">
-                  {groups.map((group) => (
-                    <SortableGroupItem
-                      key={group.id}
-                      group={group}
-                      isSelected={selectedGroupId === group.id}
-                      isEditing={editingGroupId === group.id}
-                      editingName={editingGroupName}
-                      onSelect={() => handleGroupFilter(group.id)}
-                      onEdit={() => {
-                        setEditingGroupId(group.id)
-                        setEditingGroupName(group.name)
-                      }}
-                      onDelete={() => handleDeleteGroup(group.id, group.name)}
-                      onEditChange={setEditingGroupName}
-                      onEditSubmit={() => handleUpdateGroupName(group.id, editingGroupName)}
-                      onEditCancel={() => {
-                        setEditingGroupId(null)
-                        setEditingGroupName('')
-                      }}
-                    />
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
+              清除筛选
+            </Button>
           </div>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="mb-6 flex items-center gap-3">
+        {/* 搜索框 */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+          <Input
+            placeholder="搜索字段名称或编码..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 h-7 text-xs"
+          />
         </div>
 
-        {/* 右侧内容区 */}
-        <div className="flex-1">
-          {/* 搜索和操作栏 */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="搜索字段..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+        {/* 添加按钮 */}
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open)
+          if (!open) {
+            resetForm()
+            resetDialogPosition()
+          }
+        }}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="h-7 text-xs">
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
+              添加字段
+            </Button>
+          </DialogTrigger>
+          <DialogContent 
+            ref={dialogRef}
+            className="sm:max-w-[640px] max-h-[80vh] overflow-hidden p-0"
+            style={{
+              transform: `translate(${dialogPosition.x}px, ${dialogPosition.y}px)`,
+            }}
+            onPointerDownOutside={(e) => {
+              if (isDraggingDialog) {
+                e.preventDefault()
+              }
+            }}
+          >
+            <DialogHeader 
+              className="px-4 pt-4 pb-2.5 border-b border-gray-100 cursor-move select-none"
+              onMouseDown={handleDialogDragStart}
+            >
+              <div className="flex items-center justify-between">
+                <DialogTitle className="text-sm font-medium text-gray-900">
+                  {editingField ? '编辑字段' : '添加字段'}
+                </DialogTitle>
+                <Move className="h-4 w-4 text-gray-400" />
+              </div>
+            </DialogHeader>
             
-            <Dialog open={isDialogOpen} onOpenChange={(open) => {
-              setIsDialogOpen(open)
-              if (!open) resetForm()
-            }}>
-              <DialogTrigger asChild>
-                <Button onClick={() => setEditingField(null)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  添加字段
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>{editingField ? '编辑字段' : '添加字段'}</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit}>
-                  <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+            <form onSubmit={handleSubmit} className="flex flex-col max-h-[calc(80vh-100px)]">
+              <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2">
+                {/* 字段设置 */}
+                <div className="bg-gray-50/80 rounded-md p-2.5 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600">
+                    <Type className="h-3.5 w-3.5" />
+                    字段设置
+                  </div>
+                  {/* 两列布局 */}
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    {/* 分组 - 第一行左 */}
                     <div>
-                      <Label htmlFor="fieldName">字段名称 <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="group" className="text-xs text-gray-500 mb-1 block">分组</Label>
+                      <Select
+                        value={formData.group}
+                        onValueChange={(value) => {
+                          const maxRowIndex = calculateMaxRowIndex(value)
+                          setFormData({
+                            ...formData,
+                            group: value,
+                            rowIndex: maxRowIndex + 1
+                          })
+                        }}
+                      >
+                        <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full">
+                          <SelectValue placeholder="选择分组" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {groups.map((group) => (
+                            <SelectItem key={group.id} value={group.id.toString()} className="text-xs">
+                              {group.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* 字段名称 - 第一行右 */}
+                    <div>
+                      <Label htmlFor="fieldName" className="text-xs text-gray-500 mb-1 block">
+                        字段名称 <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         id="fieldName"
                         value={formData.fieldName}
@@ -855,221 +1153,439 @@ export default function SupplierBasicInfoPage() {
                           })
                         }}
                         placeholder="例如：联系人"
+                        className="h-8 text-xs bg-white border-gray-200"
                         required
                       />
                     </div>
+
+                    {/* 显示名称 - 第二行左 */}
                     <div>
-                      <Label htmlFor="displayName">显示名称</Label>
+                      <Label htmlFor="displayName" className="text-xs text-gray-500 mb-1 block">显示名称</Label>
                       <Input
                         id="displayName"
                         value={formData.displayName}
                         onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                         placeholder="显示在页面上的名称"
+                        className="h-8 text-xs bg-white border-gray-200"
                       />
                     </div>
+
+                    {/* 字段代码 - 第二行右 */}
                     <div>
-                      <Label htmlFor="fieldCode">字段代码 <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="fieldCode" className="text-xs text-gray-500 mb-1 block">
+                        字段代码 <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         id="fieldCode"
                         value={formData.fieldCode}
                         onChange={(e) => setFormData({ ...formData, fieldCode: e.target.value })}
                         placeholder="例如：contact"
+                        className="h-8 text-xs bg-white border-gray-200"
                         required
                       />
                     </div>
+
+                    {/* 字段类型 - 第三行左 */}
                     <div>
-                      <Label htmlFor="group">所属分组</Label>
-                      <Select
-                        value={formData.group}
-                        onValueChange={(value) => setFormData({ ...formData, group: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="选择分组" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {groups.map((group) => (
-                            <SelectItem key={group.id} value={String(group.id)}>
-                              {group.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="fieldType">字段类型</Label>
+                      <Label htmlFor="fieldType" className="text-xs text-gray-500 mb-1 block">字段类型</Label>
                       <Select
                         value={formData.fieldType}
                         onValueChange={(value) => setFormData({ ...formData, fieldType: value })}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="text">文本</SelectItem>
-                          <SelectItem value="number">数字</SelectItem>
-                          <SelectItem value="select">单选</SelectItem>
-                          <SelectItem value="boolean">布尔值</SelectItem>
-                          <SelectItem value="textarea">多行文本</SelectItem>
-                          <SelectItem value="date">日期</SelectItem>
+                          <SelectItem value="text" className="text-xs">文本</SelectItem>
+                          <SelectItem value="number" className="text-xs">数字</SelectItem>
+                          <SelectItem value="select" className="text-xs">单选</SelectItem>
+                          <SelectItem value="boolean" className="text-xs">布尔值</SelectItem>
+                          <SelectItem value="textarea" className="text-xs">多行文本</SelectItem>
+                          <SelectItem value="date" className="text-xs">日期</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-                    {formData.fieldType === 'select' && (
-                      <div>
-                        <Label htmlFor="options">选项（每行一个，格式：标签:值）</Label>
-                        <textarea
-                          id="options"
-                          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[100px]"
-                          value={formData.options}
-                          onChange={(e) => setFormData({ ...formData, options: e.target.value })}
-                          placeholder="是:yes&#10;否:no"
-                        />
-                      </div>
-                    )}
-                    {formData.fieldType === 'boolean' && (
-                      <div>
-                        <Label htmlFor="defaultValue">默认值</Label>
-                        <Select
-                          value={formData.defaultValue}
-                          onValueChange={(value) => setFormData({ ...formData, defaultValue: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="选择默认值" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="true">是</SelectItem>
-                            <SelectItem value="false">否</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                    <div className="flex items-center space-x-2">
+
+                    {/* 默认值 - 第三行右 */}
+                    <div>
+                      <Label htmlFor="defaultValue" className="text-xs text-gray-500 mb-1 block">默认值</Label>
+                      <Input
+                        id="defaultValue"
+                        value={formData.defaultValue}
+                        onChange={(e) => setFormData({ ...formData, defaultValue: e.target.value })}
+                        placeholder="选填"
+                        className="h-8 text-xs bg-white border-gray-200"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 选项配置 - 仅在选择类型时显示 */}
+                  {formData.fieldType === 'select' && (
+                    <div className="mt-2">
+                      <Label htmlFor="options" className="text-xs text-gray-500 mb-1 block">选项配置</Label>
+                      <textarea
+                        id="options"
+                        className="flex w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs ring-offset-background placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px] resize-none"
+                        value={formData.options}
+                        onChange={(e) => setFormData({ ...formData, options: e.target.value })}
+                        placeholder="每行一个选项，格式：标签:值&#10;例如：&#10;是:yes&#10;否:no"
+                      />
+                    </div>
+                  )}
+
+                  {/* 开关设置 */}
+                  <div className="flex items-center gap-6 mt-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <Checkbox
                         id="isRequired"
                         checked={formData.isRequired}
                         onCheckedChange={(checked) => setFormData({ ...formData, isRequired: checked as boolean })}
+                        className="data-[state=checked]:bg-red-500 data-[state=checked]:border-red-500"
                       />
-                      <Label htmlFor="isRequired">必填字段</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-600">必填字段</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <Switch
                         id="enabled"
                         checked={formData.enabled}
                         onCheckedChange={(checked) => setFormData({ ...formData, enabled: checked })}
+                        className="data-[state=checked]:bg-green-500 scale-75"
                       />
-                      <Label htmlFor="enabled">启用字段</Label>
+                      <span className="text-xs text-gray-600">启用字段</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Switch
+                        id="newRow"
+                        checked={formData.newRow}
+                        onCheckedChange={(checked) => setFormData({ ...formData, newRow: checked })}
+                        className="data-[state=checked]:bg-blue-500 scale-75"
+                      />
+                      <span className="text-xs text-gray-600">新行</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* 布局设置 */}
+                <div className="bg-gray-50/80 rounded-md p-2.5 space-y-2">
+                  <div className="text-xs font-medium text-gray-600 mb-2">布局设置</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* 宽度 */}
+                    <div>
+                      <Label htmlFor="width" className="text-xs text-gray-500 mb-1 block">宽度 (%)</Label>
+                      <Input
+                        id="width"
+                        type="number"
+                        value={formData.width}
+                        onChange={(e) => setFormData({ ...formData, width: parseInt(e.target.value) || 100 })}
+                        min="10"
+                        max="100"
+                        className="h-8 text-xs bg-white border-gray-200"
+                      />
+                    </div>
+                    {/* 列数 */}
+                    <div>
+                      <Label htmlFor="columns" className="text-xs text-gray-500 mb-1 block">列数</Label>
+                      <Input
+                        id="columns"
+                        type="number"
+                        value={formData.columns}
+                        onChange={(e) => setFormData({ ...formData, columns: parseInt(e.target.value) || 1 })}
+                        min="1"
+                        max="12"
+                        className="h-8 text-xs bg-white border-gray-200"
+                      />
+                    </div>
+                    {/* 列宽 */}
+                    <div>
+                      <Label htmlFor="columnWidth" className="text-xs text-gray-500 mb-1 block">列宽</Label>
+                      <Input
+                        id="columnWidth"
+                        type="number"
+                        value={formData.columnWidth}
+                        onChange={(e) => setFormData({ ...formData, columnWidth: parseInt(e.target.value) || 1 })}
+                        min="1"
+                        max="12"
+                        className="h-8 text-xs bg-white border-gray-200"
+                      />
+                    </div>
+                    {/* 间距 */}
+                    <div>
+                      <Label htmlFor="spacing" className="text-xs text-gray-500 mb-1 block">间距</Label>
+                      <Input
+                        id="spacing"
+                        type="number"
+                        value={formData.spacing}
+                        onChange={(e) => setFormData({ ...formData, spacing: parseInt(e.target.value) || 2 })}
+                        min="0"
+                        max="12"
+                        className="h-8 text-xs bg-white border-gray-200"
+                      />
+                    </div>
+                    {/* 行号 */}
+                    <div>
+                      <Label htmlFor="rowIndex" className="text-xs text-gray-500 mb-1 block">行号</Label>
+                      <Input
+                        id="rowIndex"
+                        type="number"
+                        value={formData.rowIndex}
+                        onChange={(e) => setFormData({ ...formData, rowIndex: parseInt(e.target.value) || 1 })}
+                        min="1"
+                        className="h-8 text-xs bg-white border-gray-200"
+                      />
+                    </div>
+                    {/* 组内排序 */}
+                    <div>
+                      <Label htmlFor="groupSortOrder" className="text-xs text-gray-500 mb-1 block">组内排序</Label>
+                      <Input
+                        id="groupSortOrder"
+                        type="number"
+                        value={formData.groupSortOrder}
+                        onChange={(e) => setFormData({ ...formData, groupSortOrder: parseInt(e.target.value) || 0 })}
+                        min="0"
+                        className="h-8 text-xs bg-white border-gray-200"
+                      />
                     </div>
                   </div>
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      取消
-                    </Button>
-                    <Button type="submit" disabled={submitting}>
-                      {submitting ? '保存中...' : '保存'}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
+                </div>
+              </div>
+              
+              <DialogFooter className="px-4 py-2.5 border-t border-gray-100 flex-shrink-0">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setIsDialogOpen(false)} className="h-8 text-xs px-4">
+                  取消
+                </Button>
+                <Button type="submit" size="sm" disabled={submitting} className="h-8 text-xs px-4 bg-blue-500 hover:bg-blue-600">
+                  {submitting && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                  保存
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-          {/* 字段列表 */}
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 border-b">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12"></th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">序号</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分组</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">字段名称</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">显示名称</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">字段类型</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">必填</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">启用</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">排序</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredFields.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
-                      {searchQuery ? '没有找到匹配的字段' : '暂无字段配置，请添加字段'}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredFields.map((field, index) => (
-                    <tr key={field.id} className={`hover:bg-gray-50 ${!field.enabled ? 'bg-gray-100 opacity-60' : ''}`}>
-                      <td className="px-4 py-4">
-                        <GripVertical className="h-5 w-5 text-gray-400 cursor-move" />
-                      </td>
-                      <td className="px-4 py-4 text-gray-600">{index + 1}</td>
-                      <td className="px-4 py-4 text-gray-600">{field.field_group?.name || field.group_name || '-'}</td>
-                      <td className="px-4 py-4 font-medium text-gray-900">{field.field_name}</td>
-                      <td className="px-4 py-4 text-gray-600">{field.display_name || field.field_name}</td>
-                      <td className="px-4 py-4 text-gray-600">{fieldTypeMap[field.field_type] || field.field_type}</td>
-                      <td className="px-4 py-4">
-                        {field.is_required ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            必填
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            可选
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-4">
-                        <Switch
-                          checked={field.enabled !== false}
-                          onCheckedChange={() => handleToggleEnabled(field)}
-                        />
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={() => handleMoveUp(field, index)}
-                            disabled={index === 0}
-                          >
-                            <ChevronUp className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={() => handleMoveDown(field, index)}
-                            disabled={index === filteredFields.length - 1}
-                          >
-                            <ChevronDown className="h-4 w-4" />
-                          </Button>
+      {/* Table Container */}
+      <div 
+        className="bg-white"
+        style={{
+          borderRadius: 'var(--card-radius)',
+          borderWidth: 'var(--card-border-width)',
+          borderColor: 'var(--border-color)',
+          borderStyle: 'solid',
+          overflow: 'hidden'
+        }}
+      >
+        <div className="flex">
+          {/* 左侧主表格 */}
+          <div className="flex-1 overflow-x-auto">
+            {/* 表头 */}
+            <div className="flex items-center bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 h-10">
+              {columnOrder.map((colKey) => {
+                const column = defaultColumns.find(c => c.key === colKey)
+                const setting = columnSettings.find(s => s.key === colKey)
+                if (!column || !setting?.visible) return null
+                // 跳过操作列，在固定区域单独渲染
+                if (colKey === 'actions') return null
+
+                // flex 为 0 表示固定宽度，否则使用 flex 比例
+                const headerStyle: React.CSSProperties = column.flex === 0 && column.width
+                  ? { width: `${column.width}px`, flexShrink: 0 }
+                  : { flex: column.flex }
+
+                return (
+                  <div
+                    key={colKey}
+                    className={`flex items-center justify-center ${colKey === 'checkbox' ? 'pl-4 pr-2' : 'px-2'}`}
+                    style={headerStyle}
+                  >
+                    {colKey === 'checkbox' && fields.length > 0 && (
+                      <Checkbox
+                        checked={selectedIds.size === fields.length && selectedIds.size > 0}
+                        onCheckedChange={handleSelectAll}
+                        className="m-0"
+                      />
+                    )}
+                    {colKey === 'index' && <span>序号</span>}
+                    {colKey === 'group' && <span>分组</span>}
+                    {colKey === 'fieldName' && <span>字段名称</span>}
+                    {colKey === 'displayName' && <span>显示名称</span>}
+                    {colKey === 'fieldType' && <span>类型</span>}
+                    {colKey === 'width' && <span>宽度</span>}
+                    {colKey === 'columns' && <span>列数</span>}
+                    {colKey === 'columnWidth' && <span>列宽</span>}
+                    {colKey === 'spacing' && <span>间距</span>}
+                    {colKey === 'rowIndex' && <span>行号</span>}
+                    {colKey === 'isRequired' && <span>必选</span>}
+                    {colKey === 'enabled' && <span>启用</span>}
+                    {colKey === 'newRow' && <span>新行</span>}
+                    {colKey === 'sort' && <span>排序</span>}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* 数据行 */}
+            {fields.length === 0 ? (
+              <div className="p-16 text-center">
+                <p className="text-sm text-gray-400">暂无字段配置，点击上方按钮添加</p>
+              </div>
+            ) : filteredFields.length === 0 ? (
+              <div className="p-16 text-center">
+                <p className="text-sm text-gray-400 mb-3">未找到匹配的字段</p>
+                <Button variant="ghost" onClick={() => setSearchQuery('')}>
+                  清除搜索
+                </Button>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {filteredFields.map((field, index) => (
+                  <div key={field.id} className="group flex items-center hover:bg-gray-50 transition-colors h-11">
+                    {columnOrder.map((colKey) => {
+                      const column = defaultColumns.find(c => c.key === colKey)
+                      const setting = columnSettings.find(s => s.key === colKey)
+                      if (!column || !setting?.visible) return null
+                      // 跳过操作列，在固定区域单独渲染
+                      if (colKey === 'actions') return null
+
+                      // flex 为 0 表示固定宽度，否则使用 flex 比例
+                      const cellStyle: React.CSSProperties = column.flex === 0 && column.width
+                        ? { width: `${column.width}px`, flexShrink: 0 }
+                        : { flex: column.flex }
+
+                      return (
+                        <div
+                          key={colKey}
+                          className={`flex items-center justify-center ${colKey === 'checkbox' ? 'pl-4 pr-2' : 'px-2'}`}
+                          style={cellStyle}
+                        >
+                          {colKey === 'checkbox' && (
+                            <Checkbox
+                              checked={selectedIds.has(field.id)}
+                              onCheckedChange={() => handleToggleSelect(field.id)}
+                              className="m-0"
+                            />
+                          )}
+                          {colKey === 'index' && (
+                            <span className="text-sm text-gray-600">{index + 1}</span>
+                          )}
+                          {colKey === 'group' && (
+                            <span className="text-sm text-gray-600 truncate">
+                              {field.field_group?.name || '-'}
+                            </span>
+                          )}
+                          {colKey === 'fieldName' && (
+                            <span className="text-sm font-medium text-gray-900 px-1 truncate">{field.field_name}</span>
+                          )}
+                          {colKey === 'displayName' && (
+                            <span className="text-sm text-gray-700 px-1 truncate">{field.display_name || field.field_name}</span>
+                          )}
+                          {colKey === 'fieldType' && (
+                            <span className="text-sm text-gray-600">
+                              {getFieldTypeLabel(field.field_type)}
+                            </span>
+                          )}
+                          {colKey === 'width' && (
+                            <span className="text-sm text-gray-600">{field.width}%</span>
+                          )}
+                          {colKey === 'columns' && (
+                            <span className="text-sm text-gray-600">{field.columns}</span>
+                          )}
+                          {colKey === 'columnWidth' && (
+                            <span className="text-sm text-gray-600">{field.column_width}</span>
+                          )}
+                          {colKey === 'spacing' && (
+                            <span className="text-sm text-gray-600">{field.spacing}</span>
+                          )}
+                          {colKey === 'rowIndex' && (
+                            <span className="text-sm text-gray-600">{field.row_index}</span>
+                          )}
+                          {colKey === 'isRequired' && (
+                            <Switch
+                              checked={field.is_required}
+                              onCheckedChange={() => handleToggleRequired(field)}
+                              className="data-[state=checked]:bg-red-600"
+                            />
+                          )}
+                          {colKey === 'enabled' && (
+                            <Switch
+                              checked={field.enabled}
+                              onCheckedChange={() => handleToggleEnabled(field)}
+                              className="data-[state=checked]:bg-green-600"
+                            />
+                          )}
+                          {colKey === 'newRow' && (
+                            <Switch
+                              checked={field.new_row}
+                              onCheckedChange={() => handleToggleNewRow(field)}
+                              className="data-[state=checked]:bg-blue-600"
+                            />
+                          )}
+                          {colKey === 'sort' && (
+                            <div className="flex items-center justify-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 text-gray-400 hover:text-gray-700"
+                                onClick={() => moveFieldUp(index)}
+                                disabled={index === 0 || filteredFields[index - 1]?.group_id !== field.group_id}
+                              >
+                                <ChevronUp className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 text-gray-400 hover:text-gray-700"
+                                onClick={() => moveFieldDown(index)}
+                                disabled={index >= filteredFields.length - 1 || filteredFields[index + 1]?.group_id !== field.group_id}
+                              >
+                                <ChevronDown className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                      </td>
-                      <td className="px-4 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(field)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(field.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                      )
+                    })}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* 右侧固定操作列 */}
+          <div className="flex flex-col border-l border-gray-200 bg-white" style={{ minWidth: '120px', flexShrink: 0 }}>
+            {/* 操作列表头 */}
+            <div className="flex items-center justify-center bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 h-10">
+              操作
+            </div>
+            {/* 操作列数据 */}
+            {fields.length > 0 && filteredFields.length > 0 && (
+              <div className="divide-y divide-gray-100">
+                {filteredFields.map((field, index) => (
+                  <div key={field.id} className="group flex items-center hover:bg-gray-50 transition-colors h-11">
+                    <div className="flex items-center gap-1 px-2 w-full justify-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                        onClick={() => handleEdit(field)}
+                      >
+                        <Edit className="h-3.5 w-3.5 mr-1" />
+                        编辑
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs text-gray-600 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => handleDelete(field.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-1" />
+                        删除
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
