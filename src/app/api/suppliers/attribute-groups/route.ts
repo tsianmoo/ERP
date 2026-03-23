@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supplierAttributeGroupsApi } from '@/lib/java-backend-client';
 
+// 禁用缓存，确保数据实时性
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET /api/suppliers/attribute-groups - 获取所有分组
 export async function GET() {
   try {

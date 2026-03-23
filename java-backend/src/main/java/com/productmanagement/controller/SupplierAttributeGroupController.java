@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/supplier-attr-groups")
+@RequestMapping("/api/suppliers/attribute-groups")
 @RequiredArgsConstructor
 public class SupplierAttributeGroupController {
     

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/supplier-attr-values")
+@RequestMapping("/api/suppliers/attribute-values")
 @RequiredArgsConstructor
 public class SupplierAttributeValueController {
     
