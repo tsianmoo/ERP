@@ -25,6 +25,7 @@ export async function callJavaBackend<T>(
         ...headers,
       },
       body: body ? JSON.stringify(body) : undefined,
+      cache: 'no-store', // 禁用缓存，确保数据实时性
     });
 
     const data = await response.json();
@@ -312,6 +313,21 @@ export const supplierAttributeValuesApi = {
   update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/supplier-attr-values/${id}`, { method: 'PUT', body: data }),
 
   delete: (id: number) => callJavaBackend<unknown>(`/api/supplier-attr-values/${id}`, { method: 'DELETE' }),
+};
+
+// 供应商编码规则相关 API
+export const supplierCodeRulesApi = {
+  list: () => callJavaBackend<unknown>('/api/suppliers/code-rules'),
+
+  get: (id: number) => callJavaBackend<unknown>(`/api/suppliers/code-rules/${id}`),
+
+  create: (data: unknown) => callJavaBackend<unknown>('/api/suppliers/code-rules', { method: 'POST', body: data }),
+
+  update: (id: number, data: unknown) => callJavaBackend<unknown>(`/api/suppliers/code-rules/${id}`, { method: 'PUT', body: data }),
+
+  delete: (id: number) => callJavaBackend<unknown>(`/api/suppliers/code-rules/${id}`, { method: 'DELETE' }),
+
+  getVariables: () => callJavaBackend<unknown>('/api/suppliers/code-rules/variables'),
 };
 
 // 图片相关 API

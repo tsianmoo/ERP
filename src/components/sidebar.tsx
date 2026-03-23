@@ -36,6 +36,7 @@ const navigation = [
       { name: '供应商列表', href: '/suppliers' },
       { name: '基本信息管理', href: '/suppliers/basic-info' },
       { name: '供应商属性', href: '/suppliers/attributes' },
+      { name: '编码规则', href: '/suppliers/code-rules' },
     ],
   },
   {
