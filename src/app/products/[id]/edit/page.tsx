@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, Upload, X, Loader2, Lock, Plus, Eye, Edit2, Trash2, ImagePlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -75,9 +75,6 @@ export default function EditProductPage() {
   // 从 API 返回的颜色详细信息
   const [productColors, setProductColors] = useState<any[]>([])
   
-  // 标记是否已补充颜色组信息
-  const colorGroupUpdatedRef = useRef(false)
-  
   // 颜色别名映射
   const [colorAliases, setColorAliases] = useState<Record<number, string>>({})
   
@@ -110,7 +107,6 @@ export default function EditProductPage() {
       fetchProduct()
       fetchBasicFields()
       fetchAttributes()
-      fetchColors()
       fetchSizes()
       fetchSuppliers()
     }
@@ -141,46 +137,6 @@ export default function EditProductPage() {
       }
     }
   }, [sizeGroups, selectedSizeIds])
-
-  // 当 colorGroups 加载完成后，更新 selectedColorDetails 的色系信息
-  useEffect(() => {
-    // 使用 ref 避免重复更新
-    if (colorGroupUpdatedRef.current) return
-    
-    if (colorGroups.length > 0 && selectedColorDetails.length > 0) {
-      // 检查是否需要补充 groupName 或 groupCode
-      const needsUpdate = selectedColorDetails.some(
-        color => !color.groupName || !color.groupCode
-      )
-      
-      if (needsUpdate) {
-        colorGroupUpdatedRef.current = true
-        const updatedColors = selectedColorDetails.map(color => {
-          // 如果已经有 groupName 和 groupCode，不需要更新
-          if (color.groupName && color.groupCode) {
-            return color
-          }
-          // 从 colorGroups 中查找对应的颜色组
-          for (const group of colorGroups) {
-            const colorValue = group.color_values?.find(
-              (cv: any) => cv.id === color.colorValueId
-            )
-            if (colorValue) {
-              return {
-                ...color,
-                groupId: group.id,
-                groupName: group.name,
-                groupCode: group.code
-              }
-            }
-          }
-          return color
-        })
-        setSelectedColorDetails(updatedColors)
-        setProductColors(updatedColors)
-      }
-    }
-  }, [colorGroups, selectedColorDetails])
 
   // 根据条码规则生成条码
   const generateBarcode = (
@@ -234,6 +190,20 @@ export default function EditProductPage() {
   const fetchProduct = async () => {
     try {
       setFetching(true)
+      
+      // 先获取 colorGroups，用于补充 groupName 和 groupCode
+      let groupsData: any[] = []
+      try {
+        const groupsResponse = await fetch('/api/products/color-groups')
+        const groupsResult = await groupsResponse.json()
+        if (groupsResult.data) {
+          groupsData = groupsResult.data
+          setColorGroups(groupsResult.data)
+        }
+      } catch (e) {
+        console.error('获取颜色组失败:', e)
+      }
+      
       const response = await fetch(`/api/products/${params.id}`)
       const result = await response.json()
       if (result.data) {
@@ -249,10 +219,30 @@ export default function EditProductPage() {
         // Java后端返回的是 colors_data，需要从中提取 selectedColorDetails
         if (product.colors_data && product.colors_data.length > 0) {
           // 为每个颜色添加 id 字段（如果缺失），使用 colorValueId 或索引
-          const colorsWithId = product.colors_data.map((c: any, index: number) => ({
-            ...c,
-            id: c.id || c.colorValueId || Date.now() + index
-          }))
+          // 同时补充 groupName 和 groupCode（如果缺失）
+          const colorsWithId = product.colors_data.map((c: any, index: number) => {
+            const colorData = {
+              ...c,
+              id: c.id || c.colorValueId || Date.now() + index
+            }
+            
+            // 如果没有 groupName 或 groupCode，从 colorGroups 中查找
+            if (!colorData.groupName || !colorData.groupCode) {
+              for (const group of groupsData) {
+                const colorValue = group.color_values?.find(
+                  (cv: any) => cv.id === colorData.colorValueId
+                )
+                if (colorValue) {
+                  colorData.groupId = group.id
+                  colorData.groupName = group.name
+                  colorData.groupCode = group.code
+                  break
+                }
+              }
+            }
+            
+            return colorData
+          })
           setSelectedColorDetails(colorsWithId)
           setSelectedColors(colorsWithId.map((c: any) => c.colorValueId))
           setProductColors(colorsWithId)
@@ -323,19 +313,6 @@ export default function EditProductPage() {
       }
     } catch (error) {
       console.error('获取属性配置失败:', error)
-    }
-  }
-
-  // 获取颜色组
-  const fetchColors = async () => {
-    try {
-      const response = await fetch('/api/products/color-groups')
-      const result = await response.json()
-      if (result.data) {
-        setColorGroups(result.data)
-      }
-    } catch (error) {
-      console.error('获取颜色组失败:', error)
     }
   }
 
