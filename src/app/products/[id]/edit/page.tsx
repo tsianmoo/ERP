@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, Upload, X, Loader2, Lock, Plus, Eye, Edit2, Trash2, ImagePlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -75,6 +75,9 @@ export default function EditProductPage() {
   // 从 API 返回的颜色详细信息
   const [productColors, setProductColors] = useState<any[]>([])
   
+  // 标记是否已补充颜色组信息
+  const colorGroupUpdatedRef = useRef(false)
+  
   // 颜色别名映射
   const [colorAliases, setColorAliases] = useState<Record<number, string>>({})
   
@@ -138,6 +141,46 @@ export default function EditProductPage() {
       }
     }
   }, [sizeGroups, selectedSizeIds])
+
+  // 当 colorGroups 加载完成后，更新 selectedColorDetails 的色系信息
+  useEffect(() => {
+    // 使用 ref 避免重复更新
+    if (colorGroupUpdatedRef.current) return
+    
+    if (colorGroups.length > 0 && selectedColorDetails.length > 0) {
+      // 检查是否需要补充 groupName 或 groupCode
+      const needsUpdate = selectedColorDetails.some(
+        color => !color.groupName || !color.groupCode
+      )
+      
+      if (needsUpdate) {
+        colorGroupUpdatedRef.current = true
+        const updatedColors = selectedColorDetails.map(color => {
+          // 如果已经有 groupName 和 groupCode，不需要更新
+          if (color.groupName && color.groupCode) {
+            return color
+          }
+          // 从 colorGroups 中查找对应的颜色组
+          for (const group of colorGroups) {
+            const colorValue = group.color_values?.find(
+              (cv: any) => cv.id === color.colorValueId
+            )
+            if (colorValue) {
+              return {
+                ...color,
+                groupId: group.id,
+                groupName: group.name,
+                groupCode: group.code
+              }
+            }
+          }
+          return color
+        })
+        setSelectedColorDetails(updatedColors)
+        setProductColors(updatedColors)
+      }
+    }
+  }, [colorGroups, selectedColorDetails])
 
   // 根据条码规则生成条码
   const generateBarcode = (
