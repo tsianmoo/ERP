@@ -61,6 +61,9 @@ export default function ViewProductPage() {
   const [colorGroups, setColorGroups] = useState<any[]>([])
   const [sizeGroups, setSizeGroups] = useState<any[]>([])
   
+  // 供应商列表
+  const [suppliers, setSuppliers] = useState<any[]>([])
+  
   // 颜色别名映射
   const [colorAliases, setColorAliases] = useState<Record<number, string>>({})
   
@@ -166,17 +169,29 @@ export default function ViewProductPage() {
     try {
       setFetching(true)
       
-      // 先获取 colorGroups，用于补充 groupName 和 groupCode
+      // 先获取 colorGroups 和 suppliers，用于补充颜色数据
       let groupsData: any[] = []
+      let suppliersData: any[] = []
+      
       try {
-        const groupsResponse = await fetch('/api/products/color-groups')
+        const [groupsResponse, suppliersResponse] = await Promise.all([
+          fetch('/api/products/color-groups'),
+          fetch('/api/suppliers')
+        ])
+        
         const groupsResult = await groupsResponse.json()
+        const suppliersResult = await suppliersResponse.json()
+        
         if (groupsResult.data) {
           groupsData = groupsResult.data
           setColorGroups(groupsResult.data)
         }
+        if (suppliersResult.data) {
+          suppliersData = suppliersResult.data
+          setSuppliers(suppliersResult.data)
+        }
       } catch (e) {
-        console.error('获取颜色组失败:', e)
+        console.error('获取颜色组或供应商失败:', e)
       }
       
       const response = await fetch(`/api/products/${params.id}`)
@@ -194,7 +209,7 @@ export default function ViewProductPage() {
         // Java后端返回的是 colors_data，需要从中提取 selectedColorDetails
         if (product.colors_data && product.colors_data.length > 0) {
           // 为每个颜色添加 id 字段（如果缺失），使用 colorValueId 或索引
-          // 同时补充 groupName 和 groupCode（如果缺失）
+          // 同时补充 groupName、groupCode 和 supplierName（如果缺失）
           const colorsWithId = product.colors_data.map((c: any, index: number) => {
             const colorData = {
               ...c,
@@ -213,6 +228,14 @@ export default function ViewProductPage() {
                   colorData.groupCode = group.code
                   break
                 }
+              }
+            }
+            
+            // 如果没有 supplierName 但有 supplierId，从 suppliers 中查找
+            if (!colorData.supplierName && colorData.supplierId) {
+              const supplier = suppliersData.find(s => s.id === colorData.supplierId)
+              if (supplier) {
+                colorData.supplierName = supplier.name || supplier.supplier_name
               }
             }
             
@@ -679,6 +702,7 @@ export default function ViewProductPage() {
             {/* 颜色选择 */}
             <ColorSelector
               colorGroups={colorGroups}
+              suppliers={suppliers}
               value={selectedColorDetails}
               productCode={basicFieldValues['product_code'] || ''}
               readOnly={true}
