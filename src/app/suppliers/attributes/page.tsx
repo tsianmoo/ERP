@@ -677,11 +677,12 @@ export default function SupplierAttributesPage() {
                 </div>
                 <div className="bg-gray-50/80 rounded-md p-2.5 space-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600"><LayoutGrid className="h-3.5 w-3.5" />布局配置</div>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-5 gap-2">
                     <div><Label htmlFor="width" className="text-xs text-gray-500 mb-1 block">宽度 (%)</Label><Input id="width" type="number" value={formData.width} onChange={(e) => setFormData({ ...formData, width: parseInt(e.target.value) })} min="1" max="100" className="h-8 text-xs bg-white border-gray-200 w-full" /></div>
                     <div><Label htmlFor="columns" className="text-xs text-gray-500 mb-1 block">列数</Label><Input id="columns" type="number" value={formData.columns} onChange={(e) => setFormData({ ...formData, columns: parseInt(e.target.value) })} min="1" max="12" className="h-8 text-xs bg-white border-gray-200 w-full" /></div>
                     <div><Label htmlFor="columnWidth" className="text-xs text-gray-500 mb-1 block">列宽</Label><Input id="columnWidth" type="number" value={formData.columnWidth} onChange={(e) => setFormData({ ...formData, columnWidth: parseInt(e.target.value) })} min="1" max="12" className="h-8 text-xs bg-white border-gray-200 w-full" /></div>
                     <div><Label htmlFor="spacing" className="text-xs text-gray-500 mb-1 block">间距</Label><Input id="spacing" type="number" value={formData.spacing} onChange={(e) => setFormData({ ...formData, spacing: parseInt(e.target.value) })} min="0" max="5" className="h-8 text-xs bg-white border-gray-200 w-full" /></div>
+                    <div><Label htmlFor="rowIndex" className="text-xs text-gray-500 mb-1 block">行号</Label><Input id="rowIndex" type="number" value={formData.rowIndex} onChange={(e) => setFormData({ ...formData, rowIndex: parseInt(e.target.value) })} min="1" max="100" className="h-8 text-xs bg-white border-gray-200 w-full" /></div>
                   </div>
                   <div className="flex items-center justify-between pt-0.5 border-t border-gray-200/50">
                     <label className="flex items-center gap-2 cursor-pointer"><Switch id="newRow" checked={formData.newRow} onCheckedChange={(checked) => setFormData({ ...formData, newRow: checked })} className="data-[state=checked]:bg-blue-500" /><span className="text-xs text-gray-600">新行</span></label>
@@ -822,11 +823,12 @@ export default function SupplierAttributesPage() {
               </div>
               <div className="bg-gray-50/80 rounded-md p-2.5 space-y-2">
                 <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600"><LayoutGrid className="h-3.5 w-3.5" />布局配置</div>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-5 gap-2">
                   <div><Label htmlFor="editWidth" className="text-xs text-gray-500 mb-1 block">宽度 (%)</Label><Input id="editWidth" type="number" value={editFormData.width} onChange={(e) => setEditFormData({ ...editFormData, width: parseInt(e.target.value) })} min="1" max="100" className="h-8 text-xs bg-white border-gray-200 w-full" /></div>
                   <div><Label htmlFor="editColumns" className="text-xs text-gray-500 mb-1 block">列数</Label><Input id="editColumns" type="number" value={editFormData.columns} onChange={(e) => setEditFormData({ ...editFormData, columns: parseInt(e.target.value) })} min="1" max="12" className="h-8 text-xs bg-white border-gray-200 w-full" /></div>
                   <div><Label htmlFor="editColumnWidth" className="text-xs text-gray-500 mb-1 block">列宽</Label><Input id="editColumnWidth" type="number" value={editFormData.columnWidth} onChange={(e) => setEditFormData({ ...editFormData, columnWidth: parseInt(e.target.value) })} min="1" max="12" className="h-8 text-xs bg-white border-gray-200 w-full" /></div>
                   <div><Label htmlFor="editSpacing" className="text-xs text-gray-500 mb-1 block">间距</Label><Input id="editSpacing" type="number" value={editFormData.spacing} onChange={(e) => setEditFormData({ ...editFormData, spacing: parseInt(e.target.value) })} min="0" max="5" className="h-8 text-xs bg-white border-gray-200 w-full" /></div>
+                  <div><Label htmlFor="editRowIndex" className="text-xs text-gray-500 mb-1 block">行号</Label><Input id="editRowIndex" type="number" value={editFormData.rowIndex} onChange={(e) => setEditFormData({ ...editFormData, rowIndex: parseInt(e.target.value) })} min="1" max="100" className="h-8 text-xs bg-white border-gray-200 w-full" /></div>
                 </div>
                 <div className="flex items-center justify-between pt-0.5 border-t border-gray-200/50">
                   <label className="flex items-center gap-2 cursor-pointer"><Switch id="editNewRow" checked={editFormData.newRow} onCheckedChange={(checked) => setEditFormData({ ...editFormData, newRow: checked })} className="data-[state=checked]:bg-blue-500" /><span className="text-xs text-gray-600">新行</span></label>
