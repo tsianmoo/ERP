@@ -20,7 +20,7 @@ export async function PUT(
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
-    return NextResponse.json(result.data);
+    return NextResponse.json({ data: result.data });
   } catch (error) {
     console.error('更新分组失败:', error);
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });

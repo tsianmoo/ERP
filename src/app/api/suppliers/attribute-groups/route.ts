@@ -12,7 +12,8 @@ export async function GET() {
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
-    return NextResponse.json(result.data);
+    // 包装成 { data: [...] } 格式
+    return NextResponse.json({ data: result.data });
   } catch (error) {
     console.error('获取分组列表失败:', error);
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
-    return NextResponse.json(result.data, { status: 201 });
+    return NextResponse.json({ data: result.data }, { status: 201 });
   } catch (error) {
     console.error('创建分组失败:', error);
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
