@@ -28,12 +28,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // Java 后端期望 snake_case 字段名
     const javaRequest = {
-      attributeId: body.attributeId,
+      attribute_id: body.attributeId || body.attribute_id,
       name: body.name,
       code: body.code,
-      parentId: body.parentId || null,
-      sortOrder: body.sortOrder || 0,
+      parent_id: body.parentId || body.parent_id || null,
+      sort_order: body.sortOrder || body.sort_order || 0,
     };
 
     const result = await attributeValuesApi.create(javaRequest);
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(result.data, { status: 201 });
+    return NextResponse.json({ data: result.data }, { status: 201 });
   } catch (error) {
     console.error('创建属性值失败:', error);
     return NextResponse.json(

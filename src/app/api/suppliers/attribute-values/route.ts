@@ -30,12 +30,15 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // Java 后端期望 snake_case 字段名
     const javaRequest = {
-      valueName: body.value_name,
-      valueCode: body.value_code,
-      sortOrder: body.sort_order || 0,
-      attributeId: body.attribute_id,
+      attribute_id: body.attributeId || body.attribute_id,
+      name: body.name,
+      code: body.code,
+      sort_order: body.sortOrder || body.sort_order || 0,
     };
+
+    console.log('Creating supplier attribute value:', javaRequest);
 
     const result = await supplierAttributeValuesApi.create(javaRequest);
     if (result.error) {

@@ -11,11 +11,11 @@ export async function PUT(
     const { id } = await params;
     const parsedId = parseInt(id, 10);
 
+    // Java 后端期望 snake_case 字段名
     const javaRequest = {
-      valueName: body.value_name,
-      valueCode: body.value_code,
-      sortOrder: body.sort_order,
-      attributeId: body.attribute_id,
+      name: body.name,
+      code: body.code,
+      sort_order: body.sortOrder || body.sort_order,
     };
 
     const result = await supplierAttributeValuesApi.update(parsedId, javaRequest);
