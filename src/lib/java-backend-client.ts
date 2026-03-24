@@ -28,6 +28,15 @@ export async function callJavaBackend<T>(
       cache: 'no-store', // 禁用缓存，确保数据实时性
     });
 
+    // 处理 204 No Content 响应
+    if (response.status === 204) {
+      return {
+        data: null,
+        error: null,
+        status: 204,
+      };
+    }
+
     const data = await response.json();
 
     if (!response.ok) {

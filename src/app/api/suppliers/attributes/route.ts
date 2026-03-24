@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const javaRequest = {
       name: body.name,
-      code: body.code || body.name,
+      code: body.fieldCode || body.code || body.name,  // 优先使用 fieldCode 作为 code
       attributeCode: body.fieldCode || body.attributeCode,
       sortOrder: body.sortOrder || 0,
       codeLength: body.codeLength || 2,
@@ -44,6 +44,14 @@ export async function POST(request: NextRequest) {
 
     const result = await supplierAttributesApi.create(javaRequest);
     if (result.error) {
+      // 解析唯一约束错误，给出更友好的提示
+      if (result.error.includes('duplicate key value') && result.error.includes('uk_supplier_attributes_code')) {
+        const codeMatch = result.error.match(/Key \(code\)=\(([^)]+)\)/);
+        const duplicateCode = codeMatch ? codeMatch[1] : javaRequest.code;
+        return NextResponse.json({ 
+          error: `属性编码"${duplicateCode}"已存在，请修改属性名称或手动调整编码` 
+        }, { status: 400 });
+      }
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
     return NextResponse.json(result.data, { status: 201 });
