@@ -314,10 +314,12 @@ export default function SupplierBasicInfoPage() {
     try {
       const response = await fetch('/api/suppliers/code-rules')
       const result = await response.json()
-      if (result) {
+      // API 返回的是 { data: [...] } 格式
+      const rules = result.data || result
+      if (rules) {
         setFormData(prev => ({
           ...prev,
-          codeRules: Array.isArray(result) ? result : []
+          codeRules: Array.isArray(rules) ? rules : []
         }))
       }
     } catch (error) {
