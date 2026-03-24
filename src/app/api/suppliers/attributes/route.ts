@@ -42,6 +42,8 @@ export async function POST(request: NextRequest) {
       group_sort_order: body.groupSortOrder || body.group_sort_order || 0,
       is_required: body.isRequired || body.is_required || false,
       group_id: body.group_id || body.groupId,
+      field_type: body.fieldType || body.field_type || 'single_select',
+      linked_product_attribute_id: body.linkedProductAttributeId || body.linked_product_attribute_id || null,
     };
 
     const result = await supplierAttributesApi.create(javaRequest);

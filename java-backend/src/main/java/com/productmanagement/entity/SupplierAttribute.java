@@ -58,6 +58,12 @@ public class SupplierAttribute {
     @Column(name = "group_id")
     private Integer groupId;
     
+    @Column(name = "field_type")
+    private String fieldType = "single_select"; // single_select, text
+    
+    @Column(name = "linked_product_attribute_id")
+    private Integer linkedProductAttributeId; // 关联的商品属性ID
+    
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
     

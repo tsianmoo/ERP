@@ -47,6 +47,12 @@ export async function PUT(
     if (body.group_id !== undefined || body.groupId !== undefined) {
       javaRequest.group_id = body.group_id || body.groupId;
     }
+    if (body.fieldType !== undefined || body.field_type !== undefined) {
+      javaRequest.field_type = body.fieldType || body.field_type;
+    }
+    if (body.linkedProductAttributeId !== undefined || body.linked_product_attribute_id !== undefined) {
+      javaRequest.linked_product_attribute_id = body.linkedProductAttributeId || body.linked_product_attribute_id;
+    }
 
     const result = await supplierAttributesApi.update(parsedId, javaRequest);
     if (result.error) {

@@ -57,6 +57,9 @@ interface Attribute {
   sort_order: number
   code_length: number
   enabled: boolean
+  field_type?: string // single_select, text
+  linked_product_attribute_id?: number | null
+  linked_product_attribute?: { id: number; name: string; code: string } | null
   supplier_attribute_values?: AttributeValue[]
   width: number
   columns: number
@@ -237,8 +240,9 @@ export default function SupplierAttributesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isManageValuesDialogOpen, setIsManageValuesDialogOpen] = useState(false)
   const [managingAttribute, setManagingAttribute] = useState<Attribute | null>(null)
-  const [formData, setFormData] = useState({ name: '', fieldCode: '', codeLength: 2, enabled: true, isRequired: false, group: '', width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0 })
-  const [editFormData, setEditFormData] = useState({ name: '', fieldCode: '', codeLength: 2, enabled: true, width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0, isRequired: false, group: '' })
+  const [formData, setFormData] = useState({ name: '', fieldCode: '', codeLength: 2, enabled: true, isRequired: false, group: '', width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0, fieldType: 'single_select', linkedProductAttributeId: null as number | null })
+  const [editFormData, setEditFormData] = useState({ name: '', fieldCode: '', codeLength: 2, enabled: true, width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0, isRequired: false, group: '', fieldType: 'single_select', linkedProductAttributeId: null as number | null })
+  const [productAttributes, setProductAttributes] = useState<Array<{ id: number; name: string; code: string }>>([])
   const [valueFormData, setValueFormData] = useState({ name: '', code: '', parentId: null as number | null })
   const { toast } = useToast()
 
@@ -264,8 +268,22 @@ export default function SupplierAttributesPage() {
   )
 
   useEffect(() => {
-    Promise.all([fetchAttributes(), fetchAttributeGroups()])
+    Promise.all([fetchAttributes(), fetchAttributeGroups(), fetchProductAttributes()])
   }, [])
+
+  const fetchProductAttributes = async () => {
+    try {
+      const response = await fetch('/api/products/attributes')
+      const result = await response.json()
+      if (result.data) {
+        setProductAttributes(result.data.map((attr: { id: number; name: string; code: string }) => ({
+          id: attr.id,
+          name: attr.name,
+          code: attr.code
+        })))
+      }
+    } catch (error) { console.error('获取商品属性列表失败:', error) }
+  }
 
   const fetchAttributeGroups = async () => {
     try {
@@ -307,7 +325,7 @@ export default function SupplierAttributesPage() {
       if (response.ok) {
         setIsDialogOpen(false)
         fetchAttributes()
-        setFormData({ name: '', fieldCode: '', codeLength: 2, enabled: true, isRequired: false, group: '', width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0 })
+        setFormData({ name: '', fieldCode: '', codeLength: 2, enabled: true, isRequired: false, group: '', width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0, fieldType: 'single_select', linkedProductAttributeId: null })
         toast({ title: '添加成功', description: '属性分类已添加' })
       } else { const error = await response.json(); throw new Error(error.error || '添加失败') }
     } catch (error) {
@@ -404,7 +422,7 @@ export default function SupplierAttributesPage() {
       const response = await fetch(`/api/suppliers/attributes/${editingAttribute.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) })
       if (response.ok) {
         setIsEditDialogOpen(false); fetchAttributes(); setEditingAttribute(null)
-        setEditFormData({ name: '', fieldCode: '', codeLength: 2, enabled: true, width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0, isRequired: false, group: '' })
+        setEditFormData({ name: '', fieldCode: '', codeLength: 2, enabled: true, width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0, isRequired: false, group: '', fieldType: 'single_select', linkedProductAttributeId: null })
         toast({ title: '更新成功' })
       } else { const error = await response.json(); throw new Error(error.error || '更新失败') }
     } catch (error) { console.error('更新属性失败:', error); toast({ variant: 'destructive', title: '更新失败' }) }
@@ -546,6 +564,8 @@ export default function SupplierAttributesPage() {
       columns: attribute.columns || 1, columnWidth: attribute.column_width || 1, spacing: attribute.spacing || 2,
       rowIndex: attribute.row_index || 1, newRow: attribute.new_row || false, groupSortOrder: attribute.group_sort_order || 0,
       isRequired: attribute.is_required || false, group: attribute.group_id ? String(attribute.group_id) : '',
+      fieldType: attribute.field_type || 'single_select',
+      linkedProductAttributeId: attribute.linked_product_attribute_id || null,
     })
     setIsEditDialogOpen(true)
   }
@@ -650,7 +670,7 @@ export default function SupplierAttributesPage() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setFormData({ name: '', fieldCode: '', codeLength: 2, enabled: true, isRequired: false, group: '', width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0 }) }}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setFormData({ name: '', fieldCode: '', codeLength: 2, enabled: true, isRequired: false, group: '', width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0, fieldType: 'single_select', linkedProductAttributeId: null }) }}>
           <DialogTrigger asChild><Button variant="outline"><Plus className="h-4 w-4 mr-2" />添加属性分类</Button></DialogTrigger>
           <DialogContent className="sm:max-w-[560px] max-h-[80vh] overflow-hidden p-0">
             <DialogHeader className="px-4 pt-4 pb-2.5 border-b border-gray-100"><DialogTitle className="text-sm font-medium text-gray-900">添加属性分类</DialogTitle></DialogHeader>
@@ -663,12 +683,36 @@ export default function SupplierAttributesPage() {
                     <div><Label htmlFor="fieldCode" className="text-xs text-gray-500 mb-1 block">数据库字段名</Label><Input id="fieldCode" value={formData.fieldCode} placeholder="自动生成" className="h-8 text-xs bg-gray-100 border-gray-200 w-full text-gray-600" readOnly /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
+                    <div><Label htmlFor="fieldType" className="text-xs text-gray-500 mb-1 block">字段类型</Label>
+                      <Select value={formData.fieldType || "single_select"} onValueChange={(value) => setFormData({ ...formData, fieldType: value, linkedProductAttributeId: value === 'text' ? null : formData.linkedProductAttributeId })}>
+                        <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full"><SelectValue placeholder="选择类型" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="single_select" className="text-xs">单选</SelectItem>
+                          <SelectItem value="text" className="text-xs">文本</SelectItem>
+                        </SelectContent>
+                      </Select></div>
                     <div><Label htmlFor="codeLength" className="text-xs text-gray-500 mb-1 block">编码位数</Label><Input id="codeLength" type="number" value={formData.codeLength} onChange={(e) => setFormData({ ...formData, codeLength: parseInt(e.target.value) })} min="1" max="10" className="h-8 text-xs bg-white border-gray-200 w-full" required /></div>
+                  </div>
+                  {formData.fieldType === 'single_select' && (
+                    <div>
+                      <Label htmlFor="linkedProductAttribute" className="text-xs text-gray-500 mb-1 block">关联商品属性（可选）</Label>
+                      <Select value={formData.linkedProductAttributeId?.toString() || "none"} onValueChange={(value) => setFormData({ ...formData, linkedProductAttributeId: value === "none" ? null : parseInt(value) })}>
+                        <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full"><SelectValue placeholder="选择商品属性" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none" className="text-xs">不关联</SelectItem>
+                          {productAttributes.map((attr) => (<SelectItem key={attr.id} value={attr.id.toString()} className="text-xs">{attr.name} ({attr.code})</SelectItem>))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-gray-400 mt-1">关联后，供应商属性值将同步商品属性值</p>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-2">
                     <div><Label htmlFor="group" className="text-xs text-gray-500 mb-1 block">分组</Label>
                       <Select value={formData.group || "none"} onValueChange={(value) => setFormData({ ...formData, group: value === "none" ? "" : value })}>
                         <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full"><SelectValue placeholder="选择分组" /></SelectTrigger>
                         <SelectContent><SelectItem value="none" className="text-xs">无分组</SelectItem>{attributeGroups.map((group) => (<SelectItem key={group.id} value={group.id.toString()} className="text-xs">{group.name}</SelectItem>))}</SelectContent>
                       </Select></div>
+                    <div></div>
                   </div>
                   <div className="flex items-center gap-8">
                     <label className="flex items-center gap-2 cursor-pointer"><Switch id="isRequired" checked={formData.isRequired} onCheckedChange={(checked) => setFormData({ ...formData, isRequired: checked })} className="data-[state=checked]:bg-red-500" /><span className="text-xs text-gray-600">必填字段</span></label>
@@ -797,7 +841,7 @@ export default function SupplierAttributesPage() {
       </Dialog>
 
       {/* 编辑属性分类对话框 */}
-      <Dialog open={isEditDialogOpen} onOpenChange={(open) => { setIsEditDialogOpen(open); if (!open) { setEditingAttribute(null); setEditFormData({ name: '', fieldCode: '', codeLength: 2, enabled: true, width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0, isRequired: false, group: '' }) } }}>
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => { setIsEditDialogOpen(open); if (!open) { setEditingAttribute(null); setEditFormData({ name: '', fieldCode: '', codeLength: 2, enabled: true, width: 100, columns: 1, columnWidth: 1, spacing: 2, rowIndex: 1, newRow: false, groupSortOrder: 0, isRequired: false, group: '', fieldType: 'single_select', linkedProductAttributeId: null }) } }}>
         <DialogContent className="sm:max-w-[560px] max-h-[80vh] overflow-hidden p-0">
           <DialogHeader className="px-4 pt-4 pb-2.5 border-b border-gray-100"><DialogTitle className="text-sm font-medium text-gray-900">编辑属性分类</DialogTitle></DialogHeader>
           <form onSubmit={handleEditAttribute} className="flex flex-col max-h-[calc(80vh-100px)]">
@@ -809,12 +853,36 @@ export default function SupplierAttributesPage() {
                   <div><Label htmlFor="editFieldCode" className="text-xs text-gray-500 mb-1 block">数据库字段名</Label><Input id="editFieldCode" value={editFormData.fieldCode} placeholder="自动生成" className="h-8 text-xs bg-gray-100 border-gray-200 w-full text-gray-600" readOnly /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
+                  <div><Label htmlFor="editFieldType" className="text-xs text-gray-500 mb-1 block">字段类型</Label>
+                    <Select value={editFormData.fieldType || "single_select"} onValueChange={(value) => setEditFormData({ ...editFormData, fieldType: value, linkedProductAttributeId: value === 'text' ? null : editFormData.linkedProductAttributeId })}>
+                      <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full"><SelectValue placeholder="选择类型" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="single_select" className="text-xs">单选</SelectItem>
+                        <SelectItem value="text" className="text-xs">文本</SelectItem>
+                      </SelectContent>
+                    </Select></div>
                   <div><Label htmlFor="editCodeLength" className="text-xs text-gray-500 mb-1 block">编码位数</Label><Input id="editCodeLength" type="number" value={editFormData.codeLength} onChange={(e) => setEditFormData({ ...editFormData, codeLength: parseInt(e.target.value) })} min="1" max="10" className="h-8 text-xs bg-white border-gray-200 w-full" required /></div>
+                </div>
+                {editFormData.fieldType === 'single_select' && (
+                  <div>
+                    <Label htmlFor="editLinkedProductAttribute" className="text-xs text-gray-500 mb-1 block">关联商品属性（可选）</Label>
+                    <Select value={editFormData.linkedProductAttributeId?.toString() || "none"} onValueChange={(value) => setEditFormData({ ...editFormData, linkedProductAttributeId: value === "none" ? null : parseInt(value) })}>
+                      <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full"><SelectValue placeholder="选择商品属性" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none" className="text-xs">不关联</SelectItem>
+                        {productAttributes.map((attr) => (<SelectItem key={attr.id} value={attr.id.toString()} className="text-xs">{attr.name} ({attr.code})</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-[10px] text-gray-400 mt-1">关联后，供应商属性值将同步商品属性值</p>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-2">
                   <div><Label htmlFor="editGroup" className="text-xs text-gray-500 mb-1 block">分组</Label>
                     <Select value={editFormData.group || "none"} onValueChange={(value) => setEditFormData({ ...editFormData, group: value === "none" ? "" : value })}>
                       <SelectTrigger id="editGroup" className="h-8 text-xs bg-white border-gray-200 w-full"><SelectValue placeholder="选择分组" /></SelectTrigger>
                       <SelectContent><SelectItem value="none" className="text-xs">无分组</SelectItem>{attributeGroups.map((group) => (<SelectItem key={group.id} value={group.id.toString()} className="text-xs">{group.name}</SelectItem>))}</SelectContent>
                     </Select></div>
+                  <div></div>
                 </div>
                 <div className="flex items-center gap-8">
                   <label className="flex items-center gap-2 cursor-pointer"><Switch id="editIsRequired" checked={editFormData.isRequired} onCheckedChange={(checked) => setEditFormData({ ...editFormData, isRequired: checked })} className="data-[state=checked]:bg-red-500" /><span className="text-xs text-gray-600">必填字段</span></label>
