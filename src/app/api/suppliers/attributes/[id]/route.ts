@@ -11,23 +11,42 @@ export async function PUT(
     const { id } = await params;
     const parsedId = parseInt(id, 10);
 
-    const javaRequest = {
-      name: body.name,
-      code: body.code,
-      attributeCode: body.fieldCode || body.attributeCode,
-      sortOrder: body.sortOrder,
-      codeLength: body.codeLength,
-      enabled: body.enabled,
-      width: body.width,
-      columns: body.columns,
-      columnWidth: body.columnWidth,
-      spacing: body.spacing,
-      rowIndex: body.rowIndex,
-      newRow: body.newRow,
-      groupSortOrder: body.groupSortOrder,
-      isRequired: body.isRequired,
-      groupId: body.group_id,
-    };
+    // Java 后端配置了 snake_case 命名策略，需要转换字段名
+    const javaRequest: Record<string, any> = {};
+    
+    if (body.name !== undefined) javaRequest.name = body.name;
+    if (body.code !== undefined) javaRequest.code = body.code;
+    if (body.fieldCode !== undefined || body.attribute_code !== undefined) {
+      javaRequest.attribute_code = body.fieldCode || body.attribute_code;
+    }
+    if (body.sortOrder !== undefined || body.sort_order !== undefined) {
+      javaRequest.sort_order = body.sortOrder || body.sort_order;
+    }
+    if (body.codeLength !== undefined || body.code_length !== undefined) {
+      javaRequest.code_length = body.codeLength || body.code_length;
+    }
+    if (body.enabled !== undefined) javaRequest.enabled = body.enabled;
+    if (body.width !== undefined) javaRequest.width = body.width;
+    if (body.columns !== undefined) javaRequest.columns = body.columns;
+    if (body.columnWidth !== undefined || body.column_width !== undefined) {
+      javaRequest.column_width = body.columnWidth || body.column_width;
+    }
+    if (body.spacing !== undefined) javaRequest.spacing = body.spacing;
+    if (body.rowIndex !== undefined || body.row_index !== undefined) {
+      javaRequest.row_index = body.rowIndex || body.row_index;
+    }
+    if (body.newRow !== undefined || body.new_row !== undefined) {
+      javaRequest.new_row = body.newRow || body.new_row;
+    }
+    if (body.groupSortOrder !== undefined || body.group_sort_order !== undefined) {
+      javaRequest.group_sort_order = body.groupSortOrder || body.group_sort_order;
+    }
+    if (body.isRequired !== undefined || body.is_required !== undefined) {
+      javaRequest.is_required = body.isRequired || body.is_required;
+    }
+    if (body.group_id !== undefined || body.groupId !== undefined) {
+      javaRequest.group_id = body.group_id || body.groupId;
+    }
 
     const result = await supplierAttributesApi.update(parsedId, javaRequest);
     if (result.error) {

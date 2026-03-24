@@ -25,22 +25,23 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // Java 后端配置了 snake_case 命名策略，需要转换字段名
     const javaRequest = {
       name: body.name,
-      code: body.fieldCode || body.code || body.name,  // 优先使用 fieldCode 作为 code
-      attributeCode: body.fieldCode || body.attributeCode,
-      sortOrder: body.sortOrder || 0,
-      codeLength: body.codeLength || 2,
+      code: body.fieldCode || body.code || body.name,
+      attribute_code: body.fieldCode || body.attributeCode,
+      sort_order: body.sortOrder || body.sort_order || 0,
+      code_length: body.codeLength || body.code_length || 2,
       enabled: body.enabled !== undefined ? body.enabled : true,
       width: body.width || 100,
       columns: body.columns || 1,
-      columnWidth: body.columnWidth || 1,
+      column_width: body.columnWidth || body.column_width || 1,
       spacing: body.spacing || 2,
-      rowIndex: body.rowIndex || 1,
-      newRow: body.newRow || false,
-      groupSortOrder: body.groupSortOrder || 0,
-      isRequired: body.isRequired || false,
-      groupId: body.group_id,
+      row_index: body.rowIndex || body.row_index || 1,
+      new_row: body.newRow || body.new_row || false,
+      group_sort_order: body.groupSortOrder || body.group_sort_order || 0,
+      is_required: body.isRequired || body.is_required || false,
+      group_id: body.group_id || body.groupId,
     };
 
     const result = await supplierAttributesApi.create(javaRequest);
