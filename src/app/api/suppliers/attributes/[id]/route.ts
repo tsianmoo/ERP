@@ -58,7 +58,8 @@ export async function PUT(
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
-    return NextResponse.json({ data: result.data });
+    // result.data 已经是 { data: ... } 格式，直接返回
+    return NextResponse.json(result.data);
   } catch (error) {
     console.error('更新属性失败:', error);
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
