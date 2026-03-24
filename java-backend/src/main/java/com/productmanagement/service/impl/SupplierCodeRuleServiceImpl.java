@@ -1,9 +1,11 @@
 package com.productmanagement.service.impl;
 
 import com.productmanagement.dto.SupplierCodeRuleDTO;
+import com.productmanagement.entity.ProductAttribute;
 import com.productmanagement.entity.SupplierAttribute;
 import com.productmanagement.entity.SupplierBasicField;
 import com.productmanagement.entity.SupplierCodeRule;
+import com.productmanagement.repository.ProductAttributeRepository;
 import com.productmanagement.repository.SupplierAttributeRepository;
 import com.productmanagement.repository.SupplierBasicFieldRepository;
 import com.productmanagement.repository.SupplierCodeRuleRepository;
@@ -27,6 +29,7 @@ public class SupplierCodeRuleServiceImpl implements SupplierCodeRuleService {
     private final SupplierCodeRuleRepository repository;
     private final SupplierBasicFieldRepository basicFieldRepository;
     private final SupplierAttributeRepository attributeRepository;
+    private final ProductAttributeRepository productAttributeRepository;
     
     @Override
     public List<SupplierCodeRuleDTO> getAllRules() {
@@ -125,6 +128,24 @@ public class SupplierCodeRuleServiceImpl implements SupplierCodeRuleService {
             }
         } catch (Exception e) {
             log.warn("获取供应商属性变量失败: {}", e.getMessage());
+        }
+        return variables;
+    }
+    
+    @Override
+    public List<Map<String, String>> getProductAttributeVariables() {
+        List<Map<String, String>> variables = new ArrayList<>();
+        try {
+            List<ProductAttribute> attrs = productAttributeRepository.findByEnabledTrueOrderBySortOrderAsc();
+            for (ProductAttribute attr : attrs) {
+                Map<String, String> variable = new HashMap<>();
+                variable.put("value", "product_" + attr.getCode());
+                variable.put("label", attr.getName());
+                variable.put("description", "商品属性：" + attr.getName());
+                variables.add(variable);
+            }
+        } catch (Exception e) {
+            log.warn("获取商品属性变量失败: {}", e.getMessage());
         }
         return variables;
     }

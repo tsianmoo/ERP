@@ -23,7 +23,12 @@ public interface SupplierCodeRuleService {
     List<Map<String, String>> getBasicFieldVariables();
     
     /**
-     * 获取属性变量列表
+     * 获取供应商属性变量列表
      */
     List<Map<String, String>> getAttributeVariables();
+    
+    /**
+     * 获取商品属性变量列表（供供应商编码规则使用）
+     */
+    List<Map<String, String>> getProductAttributeVariables();
 }

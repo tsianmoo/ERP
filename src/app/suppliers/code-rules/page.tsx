@@ -50,6 +50,7 @@ interface VariablesData {
   builtIn: Variable[]
   basicFields: Variable[]
   attributes: Variable[]
+  productAttributes: Variable[]
 }
 
 export default function SupplierCodeRulesPage() {
@@ -57,7 +58,7 @@ export default function SupplierCodeRulesPage() {
   const { toast } = useToast()
   const [rules, setRules] = useState<CodeRule[]>([])
   const [loading, setLoading] = useState(true)
-  const [variables, setVariables] = useState<VariablesData>({ builtIn: [], basicFields: [], attributes: [] })
+  const [variables, setVariables] = useState<VariablesData>({ builtIn: [], basicFields: [], attributes: [], productAttributes: [] })
   
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingRule, setEditingRule] = useState<CodeRule | null>(null)
@@ -198,7 +199,7 @@ export default function SupplierCodeRulesPage() {
     }))
   }
 
-  const allVariables = [...variables.builtIn, ...variables.basicFields, ...variables.attributes]
+  const allVariables = [...variables.builtIn, ...variables.basicFields, ...variables.attributes, ...variables.productAttributes]
 
   const getVariableLabel = (code: string): string => {
     const variable = allVariables.find(v => v.value === code)
@@ -280,6 +281,14 @@ export default function SupplierCodeRulesPage() {
                 <>
                   <SelectItem value="__separator_attributes__" disabled>── 供应商属性 ──</SelectItem>
                   {variables.attributes.map(v => (
+                    <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>
+                  ))}
+                </>
+              )}
+              {variables.productAttributes.length > 0 && (
+                <>
+                  <SelectItem value="__separator_product__" disabled>── 商品属性 ──</SelectItem>
+                  {variables.productAttributes.map(v => (
                     <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>
                   ))}
                 </>

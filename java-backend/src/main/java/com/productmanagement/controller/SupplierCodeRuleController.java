@@ -96,12 +96,16 @@ public class SupplierCodeRuleController {
             // 基本字段变量（从服务获取）
             List<Map<String, String>> basicFields = service.getBasicFieldVariables();
             
-            // 属性变量（从服务获取）
+            // 供应商属性变量（从服务获取）
             List<Map<String, String>> attributes = service.getAttributeVariables();
+            
+            // 商品属性变量（从服务获取，供供应商编码规则使用）
+            List<Map<String, String>> productAttributes = service.getProductAttributeVariables();
             
             result.put("builtIn", builtIn);
             result.put("basicFields", basicFields);
             result.put("attributes", attributes);
+            result.put("productAttributes", productAttributes);
             
             return ResponseEntity.ok(Map.of("data", result));
         } catch (Exception e) {
