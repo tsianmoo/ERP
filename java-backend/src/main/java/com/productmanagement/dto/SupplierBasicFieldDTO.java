@@ -33,6 +33,8 @@ public class SupplierBasicFieldDTO {
     private Integer groupId;
     private String groupName;
     private FieldGroupDTO group;
+    private Boolean autoGenerate;
+    private Integer codeRuleId;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
     

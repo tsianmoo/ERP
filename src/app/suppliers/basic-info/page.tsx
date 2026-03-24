@@ -56,6 +56,8 @@ interface BasicField {
   row_index: number
   new_row: boolean
   group_sort_order: number
+  auto_generate: boolean
+  code_rule_id: number | null
 }
 
 interface FieldGroup {
@@ -211,6 +213,10 @@ export default function SupplierBasicInfoPage() {
     rowIndex: 1,
     newRow: false,
     groupSortOrder: 0,
+    // 自动生成相关
+    autoGenerate: false,
+    codeRuleId: null as number | null,
+    codeRules: [] as Array<{ id: number; rule_name: string }>,
   })
   
   const { toast } = useToast()
@@ -295,6 +301,21 @@ export default function SupplierBasicInfoPage() {
       }
     } catch (error) {
       console.error('获取分组列表失败:', error)
+    }
+  }
+
+  const fetchCodeRules = async () => {
+    try {
+      const response = await fetch('/api/suppliers/code-rules')
+      const result = await response.json()
+      if (result) {
+        setFormData(prev => ({
+          ...prev,
+          codeRules: Array.isArray(result) ? result : []
+        }))
+      }
+    } catch (error) {
+      console.error('获取编码规则列表失败:', error)
     }
   }
 
@@ -567,6 +588,17 @@ export default function SupplierBasicInfoPage() {
     setSubmitting(true)
     
     try {
+      // 验证自动生成配置
+      if (formData.autoGenerate && !formData.codeRuleId) {
+        toast({
+          variant: 'destructive',
+          title: '请选择编码规则',
+          description: '启用自动生成时必须选择一个编码规则',
+        })
+        setSubmitting(false)
+        return
+      }
+
       let options = null
       if (formData.fieldType === 'select') {
         options = formData.options.split('\n').map((opt: string) => {
@@ -599,6 +631,8 @@ export default function SupplierBasicInfoPage() {
         group_sort_order: formData.groupSortOrder,
         group_id: formData.group ? parseInt(formData.group) : null,
         group_name: formData.group ? groups.find(g => g.id === parseInt(formData.group))?.name : null,
+        auto_generate: formData.autoGenerate,
+        code_rule_id: formData.codeRuleId,
       }
 
       const url = editingField 
@@ -659,7 +693,7 @@ export default function SupplierBasicInfoPage() {
     }
   }
 
-  const handleEdit = (field: BasicField) => {
+  const handleEdit = async (field: BasicField) => {
     setEditingField(field)
     setFormData({
       fieldName: field.field_name,
@@ -680,7 +714,14 @@ export default function SupplierBasicInfoPage() {
       rowIndex: field.row_index || 1,
       newRow: field.new_row || false,
       groupSortOrder: field.group_sort_order || 0,
+      autoGenerate: field.auto_generate || false,
+      codeRuleId: field.code_rule_id || null,
+      codeRules: [],
     })
+    // 如果开启了自动生成，获取编码规则列表
+    if (field.auto_generate) {
+      await fetchCodeRules()
+    }
     setIsDialogOpen(true)
   }
 
@@ -907,6 +948,9 @@ export default function SupplierBasicInfoPage() {
       rowIndex: 1,
       newRow: false,
       groupSortOrder: 0,
+      autoGenerate: false,
+      codeRuleId: null,
+      codeRules: [],
     })
     setEditingField(null)
   }
@@ -1263,6 +1307,57 @@ export default function SupplierBasicInfoPage() {
                       <span className="text-xs text-gray-600">新行</span>
                     </label>
                   </div>
+
+                  {/* 自动生成设置 - 仅在文本类型时显示 */}
+                  {formData.fieldType === 'text' && (
+                    <div className="mt-3 pt-3 border-t border-gray-200/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Switch
+                            id="autoGenerate"
+                            checked={formData.autoGenerate}
+                            onCheckedChange={(checked) => {
+                              setFormData({ ...formData, autoGenerate: checked })
+                              if (checked) {
+                                fetchCodeRules()
+                              }
+                            }}
+                            className="data-[state=checked]:bg-blue-500"
+                          />
+                          <span className="text-xs text-gray-600 font-medium">自动生成</span>
+                        </label>
+                      </div>
+                      {formData.autoGenerate && (
+                        <div className="mt-2">
+                          <Label htmlFor="codeRuleId" className="text-xs text-gray-500 mb-1 block">编码规则</Label>
+                          <Select
+                            value={formData.codeRuleId?.toString() || ''}
+                            onValueChange={(value) => {
+                              const parsedValue = parseInt(value)
+                              setFormData({ ...formData, codeRuleId: isNaN(parsedValue) ? null : parsedValue })
+                            }}
+                          >
+                            <SelectTrigger className="h-8 text-xs bg-white border-gray-200">
+                              <SelectValue placeholder="选择编码规则" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {formData.codeRules.length > 0 ? (
+                                formData.codeRules.map((rule) => (
+                                  <SelectItem key={rule.id} value={rule.id.toString()} className="text-xs">
+                                    {rule.rule_name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <div className="px-2 py-1.5 text-xs text-gray-500">
+                                  暂无编码规则，请先在"编码规则"页面创建
+                                </div>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* 布局设置 */}

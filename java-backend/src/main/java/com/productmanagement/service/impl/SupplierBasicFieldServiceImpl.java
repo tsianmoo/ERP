@@ -63,6 +63,10 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
         field.setGroupId(request.getGroupId());
         field.setGroupName(request.getGroupName());
         
+        // 自动生成相关字段
+        field.setAutoGenerate(request.getAutoGenerate() != null ? request.getAutoGenerate() : false);
+        field.setCodeRuleId(request.getCodeRuleId());
+        
         SupplierBasicField saved = repository.save(field);
         return toDTO(saved);
     }
@@ -93,6 +97,10 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
         if (request.getGroupSortOrder() != null) field.setGroupSortOrder(request.getGroupSortOrder());
         if (request.getGroupId() != null) field.setGroupId(request.getGroupId());
         if (request.getGroupName() != null) field.setGroupName(request.getGroupName());
+        
+        // 自动生成相关字段
+        if (request.getAutoGenerate() != null) field.setAutoGenerate(request.getAutoGenerate());
+        if (request.getCodeRuleId() != null) field.setCodeRuleId(request.getCodeRuleId());
         
         SupplierBasicField saved = repository.save(field);
         return toDTO(saved);
@@ -132,6 +140,8 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
                         .id(field.getGroup().getId())
                         .name(field.getGroup().getName())
                         .build() : null)
+                .autoGenerate(field.getAutoGenerate())
+                .codeRuleId(field.getCodeRuleId())
                 .createdAt(field.getCreatedAt())
                 .updatedAt(field.getUpdatedAt())
                 .build();

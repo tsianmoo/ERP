@@ -71,6 +71,12 @@ public class SupplierBasicField {
     @Column(name = "group_name")
     private String groupName;
     
+    @Column(name = "auto_generate")
+    private Boolean autoGenerate = false;
+    
+    @Column(name = "code_rule_id")
+    private Integer codeRuleId;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", insertable = false, updatable = false)
     private SupplierFieldGroup group;
@@ -94,6 +100,7 @@ public class SupplierBasicField {
         if (rowIndex == null) rowIndex = 1;
         if (newRow == null) newRow = false;
         if (groupSortOrder == null) groupSortOrder = 0;
+        if (autoGenerate == null) autoGenerate = false;
     }
     
     @PreUpdate
