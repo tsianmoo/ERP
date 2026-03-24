@@ -21,6 +21,12 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
@@ -1181,23 +1187,39 @@ export default function SupplierBasicInfoPage() {
 
                     {/* 字段名称 - 第一行右 */}
                     <div>
-                      <Label htmlFor="fieldName" className="text-xs text-gray-500 mb-1 block">
-                        字段名称 <span className="text-red-500">*</span>
-                      </Label>
+                      <div className="flex items-center gap-1 mb-1">
+                        <Label htmlFor="fieldName" className="text-xs text-gray-500">
+                          字段名称 <span className="text-red-500">*</span>
+                        </Label>
+                        {editingField && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-xs text-gray-400 cursor-help">（不可修改）</span>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p>字段名称用于标识字段，创建后不可修改。</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
                       <Input
                         id="fieldName"
                         value={formData.fieldName}
                         onChange={(e) => {
                           const name = e.target.value
-                          setFormData({ 
-                            ...formData, 
-                            fieldName: name,
-                            fieldCode: formData.fieldCode || generateFieldCode(name),
-                            displayName: formData.displayName || name,
-                          })
+                          // 新建模式下：字段名称变化时，显示名称自动同步
+                          if (!editingField) {
+                            setFormData({ 
+                              ...formData, 
+                              fieldName: name,
+                              fieldCode: generateFieldCode(name),
+                              displayName: name,
+                            })
+                          }
                         }}
+                        readOnly={!!editingField}
                         placeholder="例如：联系人"
-                        className="h-8 text-xs bg-white border-gray-200"
+                        className={`h-8 text-xs w-full ${editingField ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed' : 'bg-white border-gray-200'}`}
                         required
                       />
                     </div>
@@ -1210,22 +1232,28 @@ export default function SupplierBasicInfoPage() {
                         value={formData.displayName}
                         onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                         placeholder="显示在页面上的名称"
-                        className="h-8 text-xs bg-white border-gray-200"
+                        className="h-8 text-xs bg-white border-gray-200 w-full"
                       />
                     </div>
 
                     {/* 字段代码 - 第二行右 */}
                     <div>
-                      <Label htmlFor="fieldCode" className="text-xs text-gray-500 mb-1 block">
-                        字段代码 <span className="text-red-500">*</span>
-                      </Label>
+                      <div className="flex items-center gap-1 mb-1">
+                        <Label htmlFor="fieldCode" className="text-xs text-gray-500">字段代码</Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-xs text-gray-400 cursor-help">（自动生成）</span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>字段代码用于存储供应商数据，自动生成不可修改。</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
                       <Input
                         id="fieldCode"
                         value={formData.fieldCode}
-                        onChange={(e) => setFormData({ ...formData, fieldCode: e.target.value })}
-                        placeholder="例如：contact"
-                        className="h-8 text-xs bg-white border-gray-200"
-                        required
+                        readOnly
+                        className="h-8 text-xs bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed w-full"
                       />
                     </div>
 
