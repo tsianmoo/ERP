@@ -57,7 +57,6 @@ public class SupplierAttributeServiceImpl implements SupplierAttributeService {
         attribute.setIsRequired(request.getIsRequired());
         attribute.setGroupId(request.getGroupId());
         attribute.setFieldType(request.getFieldType() != null ? request.getFieldType() : "single_select");
-        attribute.setLinkedProductAttributeId(request.getLinkedProductAttributeId());
         
         SupplierAttribute savedAttribute = attributeRepository.save(attribute);
         log.info("创建供应商属性成功，ID: {}", savedAttribute.getId());
@@ -118,9 +117,6 @@ public class SupplierAttributeServiceImpl implements SupplierAttributeService {
         if (request.getFieldType() != null) {
             attribute.setFieldType(request.getFieldType());
         }
-        if (request.getLinkedProductAttributeId() != null) {
-            attribute.setLinkedProductAttributeId(request.getLinkedProductAttributeId());
-        }
         
         SupplierAttribute updatedAttribute = attributeRepository.save(attribute);
         log.info("更新供应商属性成功，ID: {}", updatedAttribute.getId());
@@ -177,7 +173,6 @@ public class SupplierAttributeServiceImpl implements SupplierAttributeService {
                 .groupId(attribute.getGroupId())
                 .group(groupDTO)
                 .fieldType(attribute.getFieldType())
-                .linkedProductAttributeId(attribute.getLinkedProductAttributeId())
                 .supplierAttributeValues(valueDTOs)
                 .createdAt(attribute.getCreatedAt())
                 .updatedAt(attribute.getUpdatedAt())

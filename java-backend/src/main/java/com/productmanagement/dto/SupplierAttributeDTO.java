@@ -31,8 +31,6 @@ public class SupplierAttributeDTO {
     private Boolean isRequired;
     private Integer groupId;
     private String fieldType; // single_select, text
-    private Integer linkedProductAttributeId; // 关联的商品属性ID
-    private ProductAttributeRefDTO linkedProductAttribute; // 关联的商品属性信息
     private SupplierAttributeGroupDTO group;
     private List<AttributeValueDTO> supplierAttributeValues;
     private OffsetDateTime createdAt;
@@ -57,15 +55,5 @@ public class SupplierAttributeDTO {
         private String name;
         private String code;
         private Integer sortOrder;
-    }
-    
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ProductAttributeRefDTO {
-        private Integer id;
-        private String name;
-        private String code;
     }
 }
