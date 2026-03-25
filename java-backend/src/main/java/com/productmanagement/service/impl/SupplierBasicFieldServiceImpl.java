@@ -109,10 +109,9 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
         if (request.getAutoGenerate() != null) field.setAutoGenerate(request.getAutoGenerate());
         if (request.getCodeRuleId() != null) field.setCodeRuleId(request.getCodeRuleId());
         
-        // 关联商品属性
-        if (request.getLinkedProductAttributeId() != null) {
-            field.setLinkedProductAttributeId(request.getLinkedProductAttributeId());
-        }
+        // 关联商品属性 - 允许设置为null（取消关联）
+        // 注意：需要判断请求中是否包含该字段，而不是判断值是否为null
+        field.setLinkedProductAttributeId(request.getLinkedProductAttributeId());
         
         SupplierBasicField saved = repository.save(field);
         return toDTO(saved);
