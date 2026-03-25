@@ -345,7 +345,15 @@ export default function SupplierBasicInfoPage() {
     if (!fieldName) return ''
     
     if (commonChineseMap[fieldName]) {
-      return commonChineseMap[fieldName]
+      const baseCode = commonChineseMap[fieldName]
+      // 检查是否已存在
+      let code = baseCode
+      let counter = 1
+      while (fields.some(f => f.field_code === code && f.id !== editingField?.id)) {
+        code = `${baseCode}_${counter}`
+        counter++
+      }
+      return code
     }
     
     let result = fieldName.toLowerCase()
@@ -358,7 +366,20 @@ export default function SupplierBasicInfoPage() {
       result = 'field_' + result
     }
     
-    return result || 'custom_field'
+    // 如果结果为空（纯中文字符），使用 field_ + 时间戳
+    if (!result) {
+      result = `field_${Date.now()}`
+    }
+    
+    // 检查是否已存在，如果存在则添加数字后缀
+    let finalCode = result
+    let counter = 1
+    while (fields.some(f => f.field_code === finalCode && f.id !== editingField?.id)) {
+      finalCode = `${result}_${counter}`
+      counter++
+    }
+    
+    return finalCode
   }
 
   const calculateMaxRowIndex = (groupId: string) => {
