@@ -60,6 +60,8 @@ interface Attribute {
   is_required: boolean
   group_id: number | null
   group: { id: number; name: string } | null
+  field_type?: string // single_select, text
+  linked_product_attribute_id?: number | null
   supplier_attribute_values: AttributeValue[]
 }
 
@@ -142,9 +144,50 @@ export default function AddSupplierPage() {
       const result = await response.json()
       if (result.data) {
         // 只返回启用的属性，按排序字段排序
-        const enabledAttributes = result.data
+        let enabledAttributes = result.data
           .filter((attr: Attribute) => attr.enabled !== false)
           .sort((a: Attribute, b: Attribute) => a.sort_order - b.sort_order)
+
+        // 对于关联了商品属性的供应商属性，获取商品属性的值列表
+        const attributesWithLinkedProduct = enabledAttributes.filter(
+          (attr: Attribute) => attr.linked_product_attribute_id
+        )
+
+        if (attributesWithLinkedProduct.length > 0) {
+          // 获取商品属性值
+          const productAttrsResponse = await fetch('/api/products/attributes')
+          const productAttrsResult = await productAttrsResponse.json()
+          
+          if (productAttrsResult.data) {
+            // 创建商品属性 ID 到属性值的映射
+            const productAttrValuesMap: Record<number, any[]> = {}
+            productAttrsResult.data.forEach((attr: any) => {
+              if (attr.product_attribute_values) {
+                productAttrValuesMap[attr.id] = attr.product_attribute_values
+              }
+            })
+
+            // 更新供应商属性，使用商品属性的值列表
+            enabledAttributes = enabledAttributes.map((attr: Attribute) => {
+              if (attr.linked_product_attribute_id && productAttrValuesMap[attr.linked_product_attribute_id]) {
+                // 使用商品属性的值列表
+                const productValues = productAttrValuesMap[attr.linked_product_attribute_id]
+                return {
+                  ...attr,
+                  supplier_attribute_values: productValues.map((v: any) => ({
+                    id: v.id,
+                    attribute_id: attr.id,
+                    name: v.name,
+                    code: v.code,
+                    sort_order: v.sort_order || 0
+                  }))
+                }
+              }
+              return attr
+            })
+          }
+        }
+
         setAttributes(enabledAttributes)
       }
     } catch (error) {
@@ -379,6 +422,26 @@ export default function AddSupplierPage() {
       </Label>
     )
 
+    // 文本类型渲染为输入框
+    if (attr.field_type === 'text') {
+      return (
+        <div key={attr.id} className="space-y-1">
+          {attrLabel}
+          <Input
+            value={attributeValues[attr.code] || ''}
+            onChange={(e) => setAttributeValues(prev => ({
+              ...prev,
+              [attr.code]: e.target.value,
+            }))}
+            placeholder={`请输入${attr.name}`}
+            className={`h-8 text-xs ${hasError ? 'border-red-500' : 'bg-white'}`}
+          />
+          {hasError && <p className="text-xs text-red-500">{fieldErrors[`attr_${attr.code}`]}</p>}
+        </div>
+      )
+    }
+
+    // 单选类型渲染为下拉选择
     return (
       <div key={attr.id} className="space-y-1">
         {attrLabel}
