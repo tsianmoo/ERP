@@ -51,7 +51,7 @@ interface BasicField {
   enabled: boolean
   group_name: string | null
   group_id: number | null
-  field_group: {
+  group: {
     id: number
     name: string
   } | null
@@ -1684,7 +1684,7 @@ export default function SupplierBasicInfoPage() {
                           )}
                           {colKey === 'group' && (
                             <span className="text-sm text-gray-600 truncate">
-                              {field.field_group?.name || '-'}
+                              {field.group?.name || field.group_name || '-'}
                             </span>
                           )}
                           {colKey === 'fieldName' && (
