@@ -473,7 +473,7 @@ export default function SupplierBasicInfoPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               name: group.name,
-              sortOrder: group.sort_order 
+              sort_order: group.sort_order 
             }),
           })
         )
@@ -898,14 +898,14 @@ export default function SupplierBasicInfoPage() {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            sortOrder: prevSortOrder,
+            sort_order: prevSortOrder,
           }),
         }),
         fetch(`/api/suppliers/basic-fields/${prevField.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            sortOrder: currentSortOrder,
+            sort_order: currentSortOrder,
           }),
         }),
       ])
@@ -950,14 +950,14 @@ export default function SupplierBasicInfoPage() {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            sortOrder: nextSortOrder,
+            sort_order: nextSortOrder,
           }),
         }),
         fetch(`/api/suppliers/basic-fields/${nextField.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            sortOrder: currentSortOrder,
+            sort_order: currentSortOrder,
           }),
         }),
       ])

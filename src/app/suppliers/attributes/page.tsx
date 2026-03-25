@@ -357,7 +357,7 @@ export default function SupplierAttributesPage() {
     const updatedGroups = newGroups.map((group, index) => ({ ...group, sort_order: index }))
     setAttributeGroups(updatedGroups)
     try {
-      await Promise.all(updatedGroups.map((group) => fetch(`/api/suppliers/attribute-groups/${group.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: group.name, sortOrder: group.sort_order }) })))
+      await Promise.all(updatedGroups.map((group) => fetch(`/api/suppliers/attribute-groups/${group.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: group.name, sort_order: group.sort_order }) })))
       toast({ title: '分组排序已更新' })
     } catch (error) { console.error('更新分组排序失败:', error); fetchAttributeGroups() }
   }
@@ -486,7 +486,7 @@ export default function SupplierAttributesPage() {
 
   const updateSortOrders = async (values: AttributeValue[]) => {
     try {
-      await Promise.all(values.map((value, index) => fetch(`/api/suppliers/attribute-values/${value.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: value.name, code: value.code, sortOrder: index }) })))
+      await Promise.all(values.map((value, index) => fetch(`/api/suppliers/attribute-values/${value.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: value.name, code: value.code, sort_order: index }) })))
       const updatedAttributes = await fetchAttributes()
       if (managingAttribute && updatedAttributes) { const updated = updatedAttributes.find((a: Attribute) => a.id === managingAttribute.id); if (updated) setManagingAttribute(updated) }
     } catch (error) { console.error('更新排序失败:', error); toast({ variant: 'destructive', title: '排序失败' }) }
@@ -494,7 +494,7 @@ export default function SupplierAttributesPage() {
 
   const handleToggleAttribute = async (attribute: Attribute) => {
     try {
-      const response = await fetch(`/api/suppliers/attributes/${attribute.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: attribute.name, code: attribute.code, codeLength: attribute.code_length, enabled: !attribute.enabled }) })
+      const response = await fetch(`/api/suppliers/attributes/${attribute.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: attribute.name, code: attribute.code, code_length: attribute.code_length, enabled: !attribute.enabled }) })
       if (response.ok) { fetchAttributes(); toast({ title: attribute.enabled ? '已禁用' : '已启用' }) }
       else throw new Error('操作失败')
     } catch (error) { console.error('切换启用状态失败:', error); toast({ variant: 'destructive', title: '操作失败' }) }
@@ -502,7 +502,7 @@ export default function SupplierAttributesPage() {
 
   const handleToggleRequired = async (attribute: Attribute) => {
     try {
-      const response = await fetch(`/api/suppliers/attributes/${attribute.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: attribute.name, code: attribute.code, codeLength: attribute.code_length, isRequired: !attribute.is_required }) })
+      const response = await fetch(`/api/suppliers/attributes/${attribute.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: attribute.name, code: attribute.code, code_length: attribute.code_length, is_required: !attribute.is_required }) })
       if (response.ok) { fetchAttributes(); toast({ title: attribute.is_required ? '已设为可选' : '已设为必选' }) }
       else throw new Error('操作失败')
     } catch (error) { console.error('切换必选状态失败:', error); toast({ variant: 'destructive', title: '操作失败' }) }
@@ -510,7 +510,7 @@ export default function SupplierAttributesPage() {
 
   const handleToggleNewRow = async (attribute: Attribute) => {
     try {
-      const response = await fetch(`/api/suppliers/attributes/${attribute.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: attribute.name, code: attribute.code, codeLength: attribute.code_length, newRow: !attribute.new_row }) })
+      const response = await fetch(`/api/suppliers/attributes/${attribute.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: attribute.name, code: attribute.code, code_length: attribute.code_length, new_row: !attribute.new_row }) })
       if (response.ok) { fetchAttributes(); toast({ title: attribute.new_row ? '已取消新行' : '已设为新行' }) }
       else throw new Error('操作失败')
     } catch (error) { console.error('切换新行状态失败:', error); toast({ variant: 'destructive', title: '操作失败' }) }
@@ -530,7 +530,7 @@ export default function SupplierAttributesPage() {
 
   const updateAttributeSortOrders = async (newAttributes: Attribute[]) => {
     try {
-      await Promise.all(newAttributes.map((attr, index) => fetch(`/api/suppliers/attributes/${attr.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: attr.name, code: attr.code, codeLength: attr.code_length, enabled: attr.enabled, sortOrder: index }) })))
+      await Promise.all(newAttributes.map((attr, index) => fetch(`/api/suppliers/attributes/${attr.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: attr.name, code: attr.code, code_length: attr.code_length, enabled: attr.enabled, sort_order: index }) })))
       fetchAttributes()
     } catch (error) { console.error('更新属性排序失败:', error); toast({ variant: 'destructive', title: '排序失败' }) }
   }
