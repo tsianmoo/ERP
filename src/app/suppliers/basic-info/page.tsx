@@ -653,12 +653,17 @@ export default function SupplierBasicInfoPage() {
         return
       }
 
+      // 处理选项
+      // 如果选择了关联商品属性，则不发送 options（由商品属性值提供选项）
+      // 如果 options 为空字符串，则发送 null
       let options = null
-      if (formData.fieldType === 'select') {
-        options = formData.options.split('\n').map((opt: string) => {
-          const [label, value] = opt.split(':').map(s => s.trim())
-          return { label: label || value, value: value || label }
-        })
+      if (formData.fieldType === 'select' && !formData.linkedProductAttributeId) {
+        if (formData.options && formData.options.trim()) {
+          options = formData.options.split('\n').map((opt: string) => {
+            const [label, value] = opt.split(':').map(s => s.trim())
+            return { label: label || value, value: value || label }
+          }).filter((opt: { label: string; value: string }) => opt.label && opt.value)
+        }
       } else if (formData.fieldType === 'boolean') {
         options = [
           { label: '是', value: 'true' },

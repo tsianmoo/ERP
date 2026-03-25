@@ -89,7 +89,16 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
         if (request.getFieldCode() != null) field.setFieldCode(request.getFieldCode());
         if (request.getFieldType() != null) field.setFieldType(request.getFieldType());
         if (request.getIsRequired() != null) field.setIsRequired(request.getIsRequired());
-        if (request.getOptions() != null) field.setOptions(request.getOptions());
+        
+        // 处理 options 字段：
+        // 1. 如果关联了商品属性，则清空 options（选项从商品属性值获取）
+        // 2. 否则，更新 options（如果请求中包含）
+        if (request.getLinkedProductAttributeId() != null) {
+            field.setOptions(null);
+        } else if (request.getOptions() != null) {
+            field.setOptions(request.getOptions());
+        }
+        
         if (request.getDefaultValue() != null) field.setDefaultValue(request.getDefaultValue());
         if (request.getSortOrder() != null) field.setSortOrder(request.getSortOrder());
         if (request.getEnabled() != null) field.setEnabled(request.getEnabled());
