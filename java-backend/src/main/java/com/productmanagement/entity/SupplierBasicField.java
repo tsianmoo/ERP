@@ -77,6 +77,9 @@ public class SupplierBasicField {
     @Column(name = "code_rule_id")
     private Integer codeRuleId;
     
+    @Column(name = "linked_product_attribute_id")
+    private Integer linkedProductAttributeId;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", insertable = false, updatable = false)
     private SupplierFieldGroup group;

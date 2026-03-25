@@ -41,6 +41,9 @@ interface BasicField {
   code_rule_id: number | null
   options?: any
   default_value?: string
+  // 关联商品属性
+  linked_product_attribute_id?: number | null
+  linked_product_attribute?: { id: number; name: string; code: string } | null
 }
 
 interface Attribute {
@@ -105,7 +108,7 @@ export default function AddSupplierPage() {
       const result = await response.json()
       if (result.data) {
         // 只返回启用的字段，按分组sort_order和字段sort_order排序
-        const enabledFields = result.data
+        let enabledFields = result.data
           .filter((field: BasicField) => field.enabled !== false)
           .sort((a: BasicField, b: BasicField) => {
             // 先按分组的 sort_order 排序
@@ -117,6 +120,43 @@ export default function AddSupplierPage() {
             // 同一分组内按 sort_order 排序
             return (a.sort_order || 0) - (b.sort_order || 0)
           })
+
+        // 对于关联了商品属性的字段，获取商品属性的值列表
+        const fieldsWithLinkedProduct = enabledFields.filter(
+          (field: BasicField) => field.linked_product_attribute_id
+        )
+
+        if (fieldsWithLinkedProduct.length > 0) {
+          // 获取商品属性值
+          const productAttrsResponse = await fetch('/api/products/attributes')
+          const productAttrsResult = await productAttrsResponse.json()
+          
+          if (productAttrsResult.data) {
+            // 创建商品属性 ID 到属性值的映射
+            const productAttrValuesMap: Record<number, any[]> = {}
+            productAttrsResult.data.forEach((attr: any) => {
+              if (attr.product_attribute_values) {
+                productAttrValuesMap[attr.id] = attr.product_attribute_values
+              }
+            })
+
+            // 更新字段，使用商品属性的值列表作为选项
+            enabledFields = enabledFields.map((field: BasicField) => {
+              if (field.linked_product_attribute_id && productAttrValuesMap[field.linked_product_attribute_id]) {
+                // 使用商品属性的值列表作为选项
+                const productValues = productAttrValuesMap[field.linked_product_attribute_id]
+                return {
+                  ...field,
+                  options: productValues.map((v: any) => ({
+                    label: v.name,
+                    value: v.code
+                  }))
+                }
+              }
+              return field
+            })
+          }
+        }
         
         setBasicFields(enabledFields)
         

@@ -1,7 +1,9 @@
 package com.productmanagement.service.impl;
 
 import com.productmanagement.dto.SupplierBasicFieldDTO;
+import com.productmanagement.entity.ProductAttribute;
 import com.productmanagement.entity.SupplierBasicField;
+import com.productmanagement.repository.ProductAttributeRepository;
 import com.productmanagement.repository.SupplierBasicFieldRepository;
 import com.productmanagement.service.SupplierBasicFieldService;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -16,6 +19,7 @@ import java.util.stream.Collectors;
 public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService {
     
     private final SupplierBasicFieldRepository repository;
+    private final ProductAttributeRepository productAttributeRepository;
     
     @Override
     public List<SupplierBasicFieldDTO> getAllFields() {
@@ -67,6 +71,9 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
         field.setAutoGenerate(request.getAutoGenerate() != null ? request.getAutoGenerate() : false);
         field.setCodeRuleId(request.getCodeRuleId());
         
+        // 关联商品属性
+        field.setLinkedProductAttributeId(request.getLinkedProductAttributeId());
+        
         SupplierBasicField saved = repository.save(field);
         return toDTO(saved);
     }
@@ -102,6 +109,11 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
         if (request.getAutoGenerate() != null) field.setAutoGenerate(request.getAutoGenerate());
         if (request.getCodeRuleId() != null) field.setCodeRuleId(request.getCodeRuleId());
         
+        // 关联商品属性
+        if (request.getLinkedProductAttributeId() != null) {
+            field.setLinkedProductAttributeId(request.getLinkedProductAttributeId());
+        }
+        
         SupplierBasicField saved = repository.save(field);
         return toDTO(saved);
     }
@@ -116,6 +128,19 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
     }
     
     private SupplierBasicFieldDTO toDTO(SupplierBasicField field) {
+        // 获取关联的商品属性信息
+        SupplierBasicFieldDTO.LinkedProductAttributeDTO linkedProductAttribute = null;
+        if (field.getLinkedProductAttributeId() != null) {
+            Optional<ProductAttribute> productAttr = productAttributeRepository.findById(field.getLinkedProductAttributeId());
+            if (productAttr.isPresent()) {
+                linkedProductAttribute = SupplierBasicFieldDTO.LinkedProductAttributeDTO.builder()
+                        .id(productAttr.get().getId())
+                        .name(productAttr.get().getName())
+                        .code(productAttr.get().getCode())
+                        .build();
+            }
+        }
+        
         return SupplierBasicFieldDTO.builder()
                 .id(field.getId())
                 .fieldName(field.getFieldName())
@@ -142,6 +167,8 @@ public class SupplierBasicFieldServiceImpl implements SupplierBasicFieldService 
                         .build() : null)
                 .autoGenerate(field.getAutoGenerate())
                 .codeRuleId(field.getCodeRuleId())
+                .linkedProductAttributeId(field.getLinkedProductAttributeId())
+                .linkedProductAttribute(linkedProductAttribute)
                 .createdAt(field.getCreatedAt())
                 .updatedAt(field.getUpdatedAt())
                 .build();

@@ -35,6 +35,9 @@ public class SupplierBasicFieldDTO {
     private FieldGroupDTO group;
     private Boolean autoGenerate;
     private Integer codeRuleId;
+    // 关联商品属性
+    private Integer linkedProductAttributeId;
+    private LinkedProductAttributeDTO linkedProductAttribute;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
     
@@ -45,5 +48,15 @@ public class SupplierBasicFieldDTO {
     public static class FieldGroupDTO {
         private Integer id;
         private String name;
+    }
+    
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class LinkedProductAttributeDTO {
+        private Integer id;
+        private String name;
+        private String code;
     }
 }

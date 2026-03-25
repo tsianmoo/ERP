@@ -64,6 +64,9 @@ interface BasicField {
   group_sort_order: number
   auto_generate: boolean
   code_rule_id: number | null
+  // 关联商品属性
+  linked_product_attribute_id?: number | null
+  linked_product_attribute?: { id: number; name: string; code: string } | null
 }
 
 interface FieldGroup {
@@ -223,6 +226,9 @@ export default function SupplierBasicInfoPage() {
     autoGenerate: false,
     codeRuleId: null as number | null,
     codeRules: [] as Array<{ id: number; rule_name: string }>,
+    // 关联商品属性
+    linkedProductAttributeId: null as number | null,
+    productAttributes: [] as Array<{ id: number; name: string; code: string }>,
   })
   
   const { toast } = useToast()
@@ -274,7 +280,7 @@ export default function SupplierBasicInfoPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([fetchFields(), fetchGroups()])
+      await Promise.all([fetchFields(), fetchGroups(), fetchProductAttributes()])
     }
     loadData()
   }, [])
@@ -307,6 +313,25 @@ export default function SupplierBasicInfoPage() {
       }
     } catch (error) {
       console.error('获取分组列表失败:', error)
+    }
+  }
+
+  const fetchProductAttributes = async () => {
+    try {
+      const response = await fetch('/api/products/attributes')
+      const result = await response.json()
+      if (result.data) {
+        setFormData(prev => ({
+          ...prev,
+          productAttributes: result.data.map((attr: { id: number; name: string; code: string }) => ({
+            id: attr.id,
+            name: attr.name,
+            code: attr.code
+          }))
+        }))
+      }
+    } catch (error) {
+      console.error('获取商品属性列表失败:', error)
     }
   }
 
@@ -662,6 +687,8 @@ export default function SupplierBasicInfoPage() {
         group_name: formData.group ? groups.find(g => g.id === parseInt(formData.group))?.name : null,
         auto_generate: formData.autoGenerate,
         code_rule_id: formData.codeRuleId,
+        // 关联商品属性（仅当字段类型为 select 时有效）
+        linked_product_attribute_id: formData.fieldType === 'select' ? formData.linkedProductAttributeId : null,
       }
 
       const url = editingField 
@@ -746,6 +773,9 @@ export default function SupplierBasicInfoPage() {
       autoGenerate: field.auto_generate || false,
       codeRuleId: field.code_rule_id || null,
       codeRules: [],
+      // 关联商品属性
+      linkedProductAttributeId: field.linked_product_attribute_id || null,
+      productAttributes: formData.productAttributes, // 保持已有的商品属性列表
     })
     // 如果开启了自动生成，获取编码规则列表
     if (field.auto_generate) {
@@ -980,6 +1010,9 @@ export default function SupplierBasicInfoPage() {
       autoGenerate: false,
       codeRuleId: null,
       codeRules: [],
+      // 关联商品属性
+      linkedProductAttributeId: null,
+      productAttributes: formData.productAttributes, // 保持已有的商品属性列表
     })
     setEditingField(null)
   }
@@ -1316,15 +1349,46 @@ export default function SupplierBasicInfoPage() {
 
                   {/* 选项配置 - 仅在选择类型时显示 */}
                   {formData.fieldType === 'select' && (
-                    <div className="mt-2">
-                      <Label htmlFor="options" className="text-xs text-gray-500 mb-1 block">选项配置</Label>
-                      <textarea
-                        id="options"
-                        className="flex w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs ring-offset-background placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px] resize-none"
-                        value={formData.options}
-                        onChange={(e) => setFormData({ ...formData, options: e.target.value })}
-                        placeholder="每行一个选项，格式：标签:值&#10;例如：&#10;是:yes&#10;否:no"
-                      />
+                    <div className="mt-2 space-y-2">
+                      <div>
+                        <Label htmlFor="options" className="text-xs text-gray-500 mb-1 block">选项配置</Label>
+                        <textarea
+                          id="options"
+                          className="flex w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs ring-offset-background placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px] resize-none"
+                          value={formData.options}
+                          onChange={(e) => setFormData({ ...formData, options: e.target.value })}
+                          placeholder="每行一个选项，格式：标签:值&#10;例如：&#10;是:yes&#10;否:no"
+                        />
+                      </div>
+                      
+                      {/* 关联商品属性 */}
+                      <div>
+                        <Label htmlFor="linkedProductAttribute" className="text-xs text-gray-500 mb-1 block">
+                          关联商品属性（可选）
+                        </Label>
+                        <Select
+                          value={formData.linkedProductAttributeId?.toString() || 'none'}
+                          onValueChange={(value) => setFormData({ 
+                            ...formData, 
+                            linkedProductAttributeId: value === 'none' ? null : parseInt(value) 
+                          })}
+                        >
+                          <SelectTrigger className="h-8 text-xs bg-white border-gray-200 w-full">
+                            <SelectValue placeholder="选择商品属性" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none" className="text-xs">不关联</SelectItem>
+                            {formData.productAttributes.map((attr) => (
+                              <SelectItem key={attr.id} value={attr.id.toString()} className="text-xs">
+                                {attr.name} ({attr.code})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-gray-400 mt-1">
+                          关联后，字段选项将从商品属性值中获取，无需手动配置选项
+                        </p>
+                      </div>
                     </div>
                   )}
 
