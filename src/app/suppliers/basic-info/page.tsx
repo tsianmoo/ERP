@@ -465,22 +465,53 @@ export default function SupplierBasicInfoPage() {
   }
 
   const commonChineseMap: Record<string, string> = {
+    // 供应商基本信息
     '供应商名称': 'supplier_name',
+    '供应商编码': 'supplier_code',
+    '供应商简称': 'supplier_short_name',
+    '公司名称': 'company_name',
+    '公司全称': 'company_full_name',
+    // 联系方式
     '联系人': 'contact',
+    '联系人姓名': 'contact_name',
     '电话': 'phone',
-    '地址': 'address',
-    '邮箱': 'email',
-    '备注': 'remark',
-    '银行账户': 'bank_account',
-    '开户行': 'bank_name',
-    '税号': 'tax_number',
+    '手机': 'mobile',
+    '手机号': 'mobile',
+    '移动电话': 'mobile',
     '传真': 'fax',
+    '邮箱': 'email',
+    '电子邮箱': 'email',
+    '地址': 'address',
+    '详细地址': 'detailed_address',
     '网址': 'website',
+    '网站': 'website',
+    // 银行信息
+    '银行账户': 'bank_account',
+    '银行卡号': 'bank_account',
+    '开户行': 'bank_name',
+    '开户银行': 'bank_name',
+    '银行账号': 'bank_account_number',
+    '税号': 'tax_number',
+    '纳税人识别号': 'tax_id',
+    // 其他
+    '备注': 'remark',
+    '说明': 'description',
+    '状态': 'status',
+    '类型': 'type',
+    '分类': 'category',
+    '等级': 'level',
+    '级别': 'grade',
+    '信用等级': 'credit_level',
+    '成立日期': 'establish_date',
+    '注册资本': 'registered_capital',
+    '法人代表': 'legal_representative',
+    '经营范围': 'business_scope',
   }
 
   const generateFieldCode = (fieldName: string): string => {
     if (!fieldName) return ''
     
+    // 1. 优先使用预定义映射
     if (commonChineseMap[fieldName]) {
       const baseCode = commonChineseMap[fieldName]
       // 检查是否已存在
@@ -493,22 +524,36 @@ export default function SupplierBasicInfoPage() {
       return code
     }
     
+    // 2. 尝试将中文转换为拼音首字母或英文
     let result = fieldName.toLowerCase()
+    
+    // 替换空格和连字符为下划线
     result = result.replace(/[\s\-–—]+/g, '_')
-    result = result.replace(/[^a-z0-9_]/g, '_')
-    result = result.replace(/_{2,}/g, '_')
+    
+    // 移除非字母数字下划线的字符
+    result = result.replace(/[^a-z0-9_]/g, '')
+    
+    // 合并多个下划线
+    result = result.replace(/_+/g, '_')
+    
+    // 移除首尾下划线
     result = result.replace(/^_+|_+$/g, '')
     
-    if (/^[0-9]/.test(result)) {
-      result = 'field_' + result
+    // 3. 如果结果为空或以数字开头，使用 supplier_field_ 前缀 + 序号
+    if (!result || /^[0-9]/.test(result)) {
+      // 找到最大的序号
+      const existingCodes = fields
+        .map(f => f.field_code)
+        .filter(code => code.startsWith('supplier_field_'))
+        .map(code => {
+          const match = code.match(/supplier_field_(\d+)/)
+          return match ? parseInt(match[1]) : 0
+        })
+      const maxNum = existingCodes.length > 0 ? Math.max(...existingCodes) : 0
+      result = `supplier_field_${maxNum + 1}`
     }
     
-    // 如果结果为空（纯中文字符），使用 field_ + 时间戳
-    if (!result) {
-      result = `field_${Date.now()}`
-    }
-    
-    // 检查是否已存在，如果存在则添加数字后缀
+    // 4. 检查是否已存在，如果存在则添加数字后缀
     let finalCode = result
     let counter = 1
     while (fields.some(f => f.field_code === finalCode && f.id !== editingField?.id)) {

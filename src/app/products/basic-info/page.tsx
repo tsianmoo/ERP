@@ -276,6 +276,20 @@ export default function BasicInfoPage() {
     '批发价': 'wholesale_price',
     '建议零售价': 'msrp',
     '市场价': 'market_price',
+    // 扩展字段
+    '执行标准': 'execution_standard',
+    '安全技术类别': 'safety_category',
+    '洗涤说明': 'washing_instruction',
+    '成分': 'composition',
+    '面料': 'fabric',
+    '里料': 'lining',
+    '吊牌价': 'tag_price',
+    '赠品': 'is_gift',
+    '停止使用': 'is_discontinued',
+    '停止订货': 'is_stop_order',
+    '不计库存': 'is_no_stock',
+    '国标码': 'national_code',
+    '吊牌打印信息': 'tag_print_info',
   }
 
   // 自动生成数据库字段名
@@ -300,22 +314,26 @@ export default function BasicInfoPage() {
     result = result.replace(/[\s\-–—]+/g, '_')
     
     // 只保留小写字母、数字和下划线
-    result = result.replace(/[^a-z0-9_]/g, '_')
+    result = result.replace(/[^a-z0-9_]/g, '')
     
     // 将连续的下划线替换为单个下划线
-    result = result.replace(/_{2,}/g, '_')
+    result = result.replace(/_+/g, '_')
     
     // 去除开头和结尾的下划线
     result = result.replace(/^_+|_+$/g, '')
     
-    // 确保不以数字开头
-    if (/^[0-9]/.test(result)) {
-      result = 'field_' + result
-    }
-    
-    // 如果结果为空，使用默认值
-    if (!result) {
-      result = 'custom_field'
+    // 如果结果为空或以数字开头，使用 product_field_ 前缀 + 序号
+    if (!result || /^[0-9]/.test(result)) {
+      // 找到最大的序号
+      const existingCodes = fields
+        .map(f => f.field_code)
+        .filter(code => code && code.startsWith('product_field_'))
+        .map(code => {
+          const match = code?.match(/product_field_(\d+)/)
+          return match ? parseInt(match[1]) : 0
+        })
+      const maxNum = existingCodes.length > 0 ? Math.max(...existingCodes) : 0
+      result = `product_field_${maxNum + 1}`
     }
     
     return result
