@@ -252,8 +252,11 @@ export default function SupplierBasicInfoPage() {
     { key: 'displayName', label: '显示名称', flex: 1, freezable: false },
     { key: 'fieldType', label: '类型', flex: 0.8, freezable: false },
     { key: 'width', label: '宽度', flex: 0.6, freezable: false },
+    { key: 'columns', label: '列数', flex: 0.6, freezable: false },
     { key: 'columnWidth', label: '列宽', flex: 0.6, freezable: false },
+    { key: 'spacing', label: '间距', flex: 0.6, freezable: false },
     { key: 'rowIndex', label: '行号', flex: 0.6, freezable: false },
+    { key: 'groupSortOrder', label: '组内排序', flex: 0.8, freezable: false },
     { key: 'isRequired', label: '必选', flex: 0.5, freezable: false },
     { key: 'enabled', label: '启用', flex: 0.5, freezable: false },
     { key: 'newRow', label: '新行', flex: 0.5, freezable: false },
@@ -270,8 +273,11 @@ export default function SupplierBasicInfoPage() {
     { key: 'displayName', visible: true, frozen: false },
     { key: 'fieldType', visible: true, frozen: false },
     { key: 'width', visible: false, frozen: false },
+    { key: 'columns', visible: false, frozen: false },
     { key: 'columnWidth', visible: false, frozen: false },
+    { key: 'spacing', visible: false, frozen: false },
     { key: 'rowIndex', visible: false, frozen: false },
+    { key: 'groupSortOrder', visible: false, frozen: false },
     { key: 'isRequired', visible: true, frozen: false },
     { key: 'enabled', visible: true, frozen: false },
     { key: 'newRow', visible: false, frozen: false },
@@ -292,11 +298,16 @@ export default function SupplierBasicInfoPage() {
     if (saved) {
       try {
         const savedSettings = JSON.parse(saved)
-        const existingKeys = new Set(savedSettings.map((s: any) => s.key))
         // 确保所有默认列都在设置中
         const mergedSettings = defaultColumns.map(col => {
           const savedSetting = savedSettings.find((s: any) => s.key === col.key)
-          return savedSetting || { key: col.key, visible: col.key !== 'width' && col.key !== 'columnWidth' && col.key !== 'rowIndex' && col.key !== 'newRow', frozen: col.key === 'checkbox' || col.key === 'actions' }
+          // 默认隐藏的列：width, columns, columnWidth, spacing, rowIndex, groupSortOrder, newRow
+          const defaultHiddenKeys = ['width', 'columns', 'columnWidth', 'spacing', 'rowIndex', 'groupSortOrder', 'newRow']
+          return savedSetting || { 
+            key: col.key, 
+            visible: !defaultHiddenKeys.includes(col.key), 
+            frozen: col.key === 'checkbox' || col.key === 'actions' 
+          }
         })
         setColumnSettings(mergedSettings)
         
@@ -364,9 +375,11 @@ export default function SupplierBasicInfoPage() {
   }
 
   const handleResetColumnSettings = () => {
+    // 默认隐藏的列：width, columns, columnWidth, spacing, rowIndex, groupSortOrder, newRow
+    const defaultHiddenKeys = ['width', 'columns', 'columnWidth', 'spacing', 'rowIndex', 'groupSortOrder', 'newRow']
     const defaultSettings = defaultColumns.map(col => ({
       key: col.key,
-      visible: col.key !== 'width' && col.key !== 'columnWidth' && col.key !== 'rowIndex' && col.key !== 'newRow',
+      visible: !defaultHiddenKeys.includes(col.key),
       frozen: col.key === 'checkbox' || col.key === 'actions',
     }))
     setTempColumnSettings(defaultSettings)
@@ -1787,6 +1800,7 @@ export default function SupplierBasicInfoPage() {
                     {colKey === 'columnWidth' && <span>列宽</span>}
                     {colKey === 'spacing' && <span>间距</span>}
                     {colKey === 'rowIndex' && <span>行号</span>}
+                    {colKey === 'groupSortOrder' && <span>组内排序</span>}
                     {colKey === 'isRequired' && <span>必选</span>}
                     {colKey === 'enabled' && <span>启用</span>}
                     {colKey === 'newRow' && <span>新行</span>}
@@ -1870,6 +1884,9 @@ export default function SupplierBasicInfoPage() {
                           )}
                           {colKey === 'rowIndex' && (
                             <span className="text-sm text-gray-600">{field.row_index}</span>
+                          )}
+                          {colKey === 'groupSortOrder' && (
+                            <span className="text-sm text-gray-600">{field.group_sort_order}</span>
                           )}
                           {colKey === 'isRequired' && (
                             <Switch
