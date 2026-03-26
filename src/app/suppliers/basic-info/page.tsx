@@ -189,6 +189,7 @@ export default function SupplierBasicInfoPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false)
+  const [isBatchEditOpen, setIsBatchEditOpen] = useState(false)
   const [editingField, setEditingField] = useState<BasicField | null>(null)
   const [newGroupName, setNewGroupName] = useState('')
   const [groupSubmitting, setGroupSubmitting] = useState(false)
@@ -228,6 +229,17 @@ export default function SupplierBasicInfoPage() {
     autoGenerate: false,
     codeRuleId: null as number | null,
     codeRules: [] as Array<{ id: number; rule_name: string }>,
+  })
+  
+  const [batchFormData, setBatchFormData] = useState({
+    group: { value: '', enabled: false },
+    width: { value: 100, enabled: false },
+    columns: { value: 1, enabled: false },
+    columnWidth: { value: 1, enabled: false },
+    spacing: { value: 2, enabled: false },
+    rowIndex: { value: 1, enabled: false },
+    newRow: { value: false, enabled: false },
+    groupSortOrder: { value: 0, enabled: false },
   })
   
   const { toast } = useToast()
@@ -273,14 +285,14 @@ export default function SupplierBasicInfoPage() {
     { key: 'displayName', visible: true, frozen: false },
     { key: 'fieldType', visible: true, frozen: false },
     { key: 'width', visible: false, frozen: false },
-    { key: 'columns', visible: false, frozen: false },
-    { key: 'columnWidth', visible: false, frozen: false },
+    { key: 'columns', visible: true, frozen: false },
+    { key: 'columnWidth', visible: true, frozen: false },
     { key: 'spacing', visible: false, frozen: false },
-    { key: 'rowIndex', visible: false, frozen: false },
-    { key: 'groupSortOrder', visible: false, frozen: false },
+    { key: 'rowIndex', visible: true, frozen: false },
+    { key: 'groupSortOrder', visible: true, frozen: false },
     { key: 'isRequired', visible: true, frozen: false },
     { key: 'enabled', visible: true, frozen: false },
-    { key: 'newRow', visible: false, frozen: false },
+    { key: 'newRow', visible: true, frozen: false },
     { key: 'sort', visible: true, frozen: false },
     { key: 'actions', visible: true, frozen: true },
   ])
@@ -301,8 +313,8 @@ export default function SupplierBasicInfoPage() {
         // 确保所有默认列都在设置中
         const mergedSettings = defaultColumns.map(col => {
           const savedSetting = savedSettings.find((s: any) => s.key === col.key)
-          // 默认隐藏的列：width, columns, columnWidth, spacing, rowIndex, groupSortOrder, newRow
-          const defaultHiddenKeys = ['width', 'columns', 'columnWidth', 'spacing', 'rowIndex', 'groupSortOrder', 'newRow']
+          // 默认隐藏的列：width, spacing
+          const defaultHiddenKeys = ['width', 'spacing']
           return savedSetting || { 
             key: col.key, 
             visible: !defaultHiddenKeys.includes(col.key), 
@@ -375,8 +387,8 @@ export default function SupplierBasicInfoPage() {
   }
 
   const handleResetColumnSettings = () => {
-    // 默认隐藏的列：width, columns, columnWidth, spacing, rowIndex, groupSortOrder, newRow
-    const defaultHiddenKeys = ['width', 'columns', 'columnWidth', 'spacing', 'rowIndex', 'groupSortOrder', 'newRow']
+    // 默认隐藏的列：width, spacing
+    const defaultHiddenKeys = ['width', 'spacing']
     const defaultSettings = defaultColumns.map(col => ({
       key: col.key,
       visible: !defaultHiddenKeys.includes(col.key),
@@ -1087,6 +1099,70 @@ export default function SupplierBasicInfoPage() {
     setSelectedIds(newSelected)
   }
 
+  const handleBatchEdit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (selectedIds.size === 0) {
+      toast({
+        variant: 'destructive',
+        title: '请选择字段',
+        description: '请先选择要批量编辑的字段',
+      })
+      return
+    }
+
+    // 构建只包含启用参数的更新对象
+    const updateData: any = {}
+    if (batchFormData.group.enabled) updateData.group = batchFormData.group.value
+    if (batchFormData.width.enabled) updateData.width = batchFormData.width.value
+    if (batchFormData.columns.enabled) updateData.columns = batchFormData.columns.value
+    if (batchFormData.columnWidth.enabled) updateData.columnWidth = batchFormData.columnWidth.value
+    if (batchFormData.spacing.enabled) updateData.spacing = batchFormData.spacing.value
+    if (batchFormData.rowIndex.enabled) updateData.rowIndex = batchFormData.rowIndex.value
+    if (batchFormData.newRow.enabled) updateData.newRow = batchFormData.newRow.value
+    if (batchFormData.groupSortOrder.enabled) updateData.groupSortOrder = batchFormData.groupSortOrder.value
+
+    // 检查是否有启用的参数
+    const enabledCount = Object.values(batchFormData).filter((item: any) => item.enabled).length
+    if (enabledCount === 0) {
+      toast({
+        variant: 'destructive',
+        title: '请选择要修改的配置项',
+        description: '请至少勾选一个配置项',
+      })
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      await Promise.all(
+        Array.from(selectedIds).map(id =>
+          fetch(`/api/suppliers/basic-fields/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updateData),
+          })
+        )
+      )
+
+      setIsBatchEditOpen(false)
+      setSelectedIds(new Set())
+      fetchFields()
+      toast({
+        title: '批量更新成功',
+        description: `已更新 ${selectedIds.size} 个字段的 ${enabledCount} 个配置项`,
+      })
+    } catch (error) {
+      console.error('批量更新失败:', error)
+      toast({
+        variant: 'destructive',
+        title: '批量更新失败',
+        description: '请重试',
+      })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   const resetForm = () => {
     setFormData({
       fieldName: '',
@@ -1274,6 +1350,292 @@ export default function SupplierBasicInfoPage() {
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+
+        {/* 批量编辑按钮 */}
+        <Dialog open={isBatchEditOpen} onOpenChange={(open) => {
+          setIsBatchEditOpen(open)
+          if (!open) {
+            setBatchFormData({
+              group: { value: '', enabled: false },
+              width: { value: 100, enabled: false },
+              columns: { value: 1, enabled: false },
+              columnWidth: { value: 1, enabled: false },
+              spacing: { value: 2, enabled: false },
+              rowIndex: { value: 1, enabled: false },
+              newRow: { value: false, enabled: false },
+              groupSortOrder: { value: 0, enabled: false },
+            })
+          }
+        }}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="h-7 text-xs" disabled={selectedIds.size === 0}>
+              <Settings2 className="h-3.5 w-3.5 mr-1.5" />
+              批量编辑 ({selectedIds.size})
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[560px] max-h-[85vh] overflow-hidden flex flex-col p-0">
+            <DialogHeader className="px-4 py-2.5 border-b flex-shrink-0">
+              <DialogTitle className="text-sm font-medium">批量编辑布局配置</DialogTitle>
+            </DialogHeader>
+            
+            <form onSubmit={handleBatchEdit} className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto px-4 py-2.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-600">
+                    已选择 <span className="font-medium text-blue-600">{selectedIds.size}</span> 个字段
+                  </p>
+                  <p className="text-[10px] text-gray-400">
+                    仅勾选的配置项会被更新
+                  </p>
+                </div>
+
+                {/* 分组选择 */}
+                <div className="flex items-center gap-2 p-2.5 border border-gray-200 rounded-md bg-blue-50/30">
+                  <Switch
+                    checked={batchFormData.group.enabled}
+                    onCheckedChange={(checked) => setBatchFormData({ 
+                      ...batchFormData, 
+                      group: { ...batchFormData.group, enabled: checked } 
+                    })}
+                    className="data-[state=checked]:bg-blue-500"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="batchGroup" className="text-xs text-gray-600 mb-1 block">分组</Label>
+                    <Select
+                      value={batchFormData.group.value}
+                      onValueChange={(value) => setBatchFormData({ 
+                        ...batchFormData, 
+                        group: { ...batchFormData.group, value: value } 
+                      })}
+                      disabled={!batchFormData.group.enabled}
+                    >
+                      <SelectTrigger className="h-8 text-xs bg-white">
+                        <SelectValue placeholder="选择分组" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {groups.map((group) => (
+                          <SelectItem key={group.id} value={group.id.toString()} className="text-xs">
+                            {group.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* 布局配置 - 2x2 网格 */}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* 宽度 */}
+                  <div className={`flex items-center gap-2 p-2.5 border rounded-md ${batchFormData.width.enabled ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200'}`}>
+                    <Switch
+                      checked={batchFormData.width.enabled}
+                      onCheckedChange={(checked) => setBatchFormData({ 
+                        ...batchFormData, 
+                        width: { ...batchFormData.width, enabled: checked } 
+                      })}
+                      className="data-[state=checked]:bg-blue-500 scale-75"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="batchWidth" className="text-xs text-gray-600 mb-1 block">宽度 (%)</Label>
+                      <Input
+                        id="batchWidth"
+                        type="number"
+                        value={batchFormData.width.value}
+                        onChange={(e) => setBatchFormData({ 
+                          ...batchFormData, 
+                          width: { ...batchFormData.width, value: parseInt(e.target.value) || 100 } 
+                        })}
+                        min="1"
+                        max="100"
+                        disabled={!batchFormData.width.enabled}
+                        className="h-8 text-xs bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 列数 */}
+                  <div className={`flex items-center gap-2 p-2.5 border rounded-md ${batchFormData.columns.enabled ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200'}`}>
+                    <Switch
+                      checked={batchFormData.columns.enabled}
+                      onCheckedChange={(checked) => setBatchFormData({ 
+                        ...batchFormData, 
+                        columns: { ...batchFormData.columns, enabled: checked } 
+                      })}
+                      className="data-[state=checked]:bg-blue-500 scale-75"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="batchColumns" className="text-xs text-gray-600 mb-1 block">列数</Label>
+                      <Input
+                        id="batchColumns"
+                        type="number"
+                        value={batchFormData.columns.value}
+                        onChange={(e) => setBatchFormData({ 
+                          ...batchFormData, 
+                          columns: { ...batchFormData.columns, value: parseInt(e.target.value) || 1 } 
+                        })}
+                        min="1"
+                        max="12"
+                        disabled={!batchFormData.columns.enabled}
+                        className="h-8 text-xs bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 间距 */}
+                  <div className={`flex items-center gap-2 p-2.5 border rounded-md ${batchFormData.spacing.enabled ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200'}`}>
+                    <Switch
+                      checked={batchFormData.spacing.enabled}
+                      onCheckedChange={(checked) => setBatchFormData({ 
+                        ...batchFormData, 
+                        spacing: { ...batchFormData.spacing, enabled: checked } 
+                      })}
+                      className="data-[state=checked]:bg-blue-500 scale-75"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="batchSpacing" className="text-xs text-gray-600 mb-1 block">间距</Label>
+                      <Input
+                        id="batchSpacing"
+                        type="number"
+                        value={batchFormData.spacing.value}
+                        onChange={(e) => setBatchFormData({ 
+                          ...batchFormData, 
+                          spacing: { ...batchFormData.spacing, value: parseInt(e.target.value) || 2 } 
+                        })}
+                        min="0"
+                        max="5"
+                        disabled={!batchFormData.spacing.enabled}
+                        className="h-8 text-xs bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 行号 */}
+                  <div className={`flex items-center gap-2 p-2.5 border rounded-md ${batchFormData.rowIndex.enabled ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200'}`}>
+                    <Switch
+                      checked={batchFormData.rowIndex.enabled}
+                      onCheckedChange={(checked) => setBatchFormData({ 
+                        ...batchFormData, 
+                        rowIndex: { ...batchFormData.rowIndex, enabled: checked } 
+                      })}
+                      className="data-[state=checked]:bg-blue-500 scale-75"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="batchRowIndex" className="text-xs text-gray-600 mb-1 block">行号</Label>
+                      <Input
+                        id="batchRowIndex"
+                        type="number"
+                        value={batchFormData.rowIndex.value}
+                        onChange={(e) => setBatchFormData({ 
+                          ...batchFormData, 
+                          rowIndex: { ...batchFormData.rowIndex, value: parseInt(e.target.value) || 1 } 
+                        })}
+                        min="1"
+                        disabled={!batchFormData.rowIndex.enabled}
+                        className="h-8 text-xs bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 列宽和分组内排序 - 单独一行 */}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* 列宽 */}
+                  <div className={`flex items-center gap-2 p-2.5 border rounded-md ${batchFormData.columnWidth.enabled ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200'}`}>
+                    <Switch
+                      checked={batchFormData.columnWidth.enabled}
+                      onCheckedChange={(checked) => setBatchFormData({ 
+                        ...batchFormData, 
+                        columnWidth: { ...batchFormData.columnWidth, enabled: checked } 
+                      })}
+                      className="data-[state=checked]:bg-blue-500 scale-75"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="batchColumnWidth" className="text-xs text-gray-600 mb-1 block">列宽</Label>
+                      <Input
+                        id="batchColumnWidth"
+                        type="number"
+                        value={batchFormData.columnWidth.value}
+                        onChange={(e) => setBatchFormData({ 
+                          ...batchFormData, 
+                          columnWidth: { ...batchFormData.columnWidth, value: parseInt(e.target.value) || 1 } 
+                        })}
+                        min="1"
+                        max="12"
+                        disabled={!batchFormData.columnWidth.enabled}
+                        className="h-8 text-xs bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 分组内排序 */}
+                  <div className={`flex items-center gap-2 p-2.5 border rounded-md ${batchFormData.groupSortOrder.enabled ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200'}`}>
+                    <Switch
+                      checked={batchFormData.groupSortOrder.enabled}
+                      onCheckedChange={(checked) => setBatchFormData({ 
+                        ...batchFormData, 
+                        groupSortOrder: { ...batchFormData.groupSortOrder, enabled: checked } 
+                      })}
+                      className="data-[state=checked]:bg-blue-500 scale-75"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="batchGroupSortOrder" className="text-xs text-gray-600 mb-1 block">组内排序</Label>
+                      <Input
+                        id="batchGroupSortOrder"
+                        type="number"
+                        value={batchFormData.groupSortOrder.value}
+                        onChange={(e) => setBatchFormData({ 
+                          ...batchFormData, 
+                          groupSortOrder: { ...batchFormData.groupSortOrder, value: parseInt(e.target.value) || 0 } 
+                        })}
+                        min="0"
+                        disabled={!batchFormData.groupSortOrder.enabled}
+                        className="h-8 text-xs bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 新行 */}
+                <div className={`flex items-center justify-between p-2.5 border rounded-md ${batchFormData.newRow.enabled ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200'}`}>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Switch
+                      id="batchNewRow"
+                      checked={batchFormData.newRow.enabled}
+                      onCheckedChange={(checked) => setBatchFormData({ 
+                        ...batchFormData, 
+                        newRow: { ...batchFormData.newRow, enabled: checked } 
+                      })}
+                      className="data-[state=checked]:bg-blue-500"
+                    />
+                    <span className="text-xs text-gray-600">启用新行设置</span>
+                  </label>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-gray-500">新行</span>
+                    <Switch
+                      checked={batchFormData.newRow.value}
+                      onCheckedChange={(checked) => setBatchFormData({ 
+                        ...batchFormData, 
+                        newRow: { ...batchFormData.newRow, value: checked } 
+                      })}
+                      disabled={!batchFormData.newRow.enabled}
+                      className="data-[state=checked]:bg-green-500"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2 px-4 py-2.5 border-t flex-shrink-0 bg-gray-50/30">
+                <Button type="button" variant="outline" size="sm" onClick={() => setIsBatchEditOpen(false)} className="h-8 text-xs px-4">
+                  取消
+                </Button>
+                <Button type="submit" size="sm" disabled={submitting} className="h-8 text-xs px-4 bg-blue-500 hover:bg-blue-600">
+                  {submitting && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                  批量更新
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* 添加按钮 */}
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
