@@ -76,6 +76,12 @@ interface AttributeValue {
   sort_order: number
 }
 
+interface FieldGroup {
+  id: number
+  name: string
+  sort_order: number
+}
+
 export default function AddSupplierPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -94,10 +100,13 @@ export default function AddSupplierPage() {
   
   // 字段验证错误
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  // 分组列表
+  const [groups, setGroups] = useState<FieldGroup[]>([])
 
   useEffect(() => {
     fetchBasicFields()
     fetchAttributes()
+    fetchGroups()
   }, [])
 
   // 获取基本信息字段
@@ -174,6 +183,19 @@ export default function AddSupplierPage() {
       toast({ variant: 'destructive', title: '加载失败', description: '无法加载基本信息字段' })
     } finally {
       setLoading(false)
+    }
+  }
+
+  // 获取分组列表
+  const fetchGroups = async () => {
+    try {
+      const response = await fetch('/api/suppliers/field-groups')
+      const result = await response.json()
+      if (result.data) {
+        setGroups(result.data.sort((a: FieldGroup, b: FieldGroup) => a.sort_order - b.sort_order))
+      }
+    } catch (error) {
+      console.error('获取分组列表失败:', error)
     }
   }
 
@@ -521,9 +543,19 @@ export default function AddSupplierPage() {
       groupedFields[groupName].push(field)
     })
 
+    // 按分组的 sort_order 排序
+    const sortedGroupNames = Object.keys(groupedFields).sort((a, b) => {
+      const aGroup = groups.find(g => g.name === a)
+      const bGroup = groups.find(g => g.name === b)
+      const aSortOrder = aGroup?.sort_order ?? 999999
+      const bSortOrder = bGroup?.sort_order ?? 999999
+      return aSortOrder - bSortOrder
+    })
+
     return (
       <div className="space-y-4">
-        {Object.entries(groupedFields).map(([groupName, fields]) => {
+        {sortedGroupNames.map((groupName) => {
+          const fields = groupedFields[groupName]
           // 按行分组
           const fieldsByRow: Record<number, BasicField[]> = {}
           fields.forEach(field => {
@@ -764,11 +796,11 @@ export default function AddSupplierPage() {
 
       {/* 主内容区 */}
       <div className="w-full p-6 space-y-4">
-        {/* 基本信息 */}
-        {renderBasicFieldsByGroup()}
-        
-        {/* 供应商属性 */}
+        {/* 供应商属性 - 放在最上面 */}
         {renderAttributesByLayout()}
+        
+        {/* 基本信息 - 按分组排序 */}
+        {renderBasicFieldsByGroup()}
       </div>
     </div>
   )

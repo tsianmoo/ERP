@@ -72,6 +72,12 @@ interface AttributeValue {
   sort_order: number
 }
 
+interface FieldGroup {
+  id: number
+  name: string
+  sort_order: number
+}
+
 export default function EditSupplierPage() {
   const router = useRouter()
   const params = useParams()
@@ -92,6 +98,8 @@ export default function EditSupplierPage() {
   
   // 字段验证错误
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  // 分组列表
+  const [groups, setGroups] = useState<FieldGroup[]>([])
 
   useEffect(() => {
     loadData()
@@ -102,11 +110,18 @@ export default function EditSupplierPage() {
     try {
       setLoading(true)
       // 并行加载字段配置和供应商数据
-      const [basicFieldsRes, attributesRes, supplierRes] = await Promise.all([
+      const [basicFieldsRes, attributesRes, supplierRes, groupsRes] = await Promise.all([
         fetch('/api/suppliers/basic-fields'),
         fetch('/api/suppliers/attributes'),
-        fetch(`/api/suppliers/${supplierId}`)
+        fetch(`/api/suppliers/${supplierId}`),
+        fetch('/api/suppliers/field-groups')
       ])
+
+      // 处理分组
+      const groupsResult = await groupsRes.json()
+      if (groupsResult.data) {
+        setGroups(groupsResult.data.sort((a: FieldGroup, b: FieldGroup) => a.sort_order - b.sort_order))
+      }
 
       // 处理基本信息字段
       const basicFieldsResult = await basicFieldsRes.json()
@@ -509,9 +524,19 @@ export default function EditSupplierPage() {
       groupedFields[groupName].push(field)
     })
 
+    // 按分组的 sort_order 排序
+    const sortedGroupNames = Object.keys(groupedFields).sort((a, b) => {
+      const aGroup = groups.find(g => g.name === a)
+      const bGroup = groups.find(g => g.name === b)
+      const aSortOrder = aGroup?.sort_order ?? 999999
+      const bSortOrder = bGroup?.sort_order ?? 999999
+      return aSortOrder - bSortOrder
+    })
+
     return (
       <div className="space-y-4">
-        {Object.entries(groupedFields).map(([groupName, fields]) => {
+        {sortedGroupNames.map((groupName) => {
+          const fields = groupedFields[groupName]
           const fieldsByRow: Record<number, BasicField[]> = {}
           fields.forEach(field => {
             const rowIndex = field.row_index || 1
@@ -745,11 +770,11 @@ export default function EditSupplierPage() {
 
       {/* 主内容区 */}
       <div className="w-full p-6 space-y-4">
-        {/* 基本信息 */}
-        {renderBasicFieldsByGroup()}
-        
-        {/* 供应商属性 */}
+        {/* 供应商属性 - 放在最上面 */}
         {renderAttributesByLayout()}
+        
+        {/* 基本信息 - 按分组排序 */}
+        {renderBasicFieldsByGroup()}
       </div>
     </div>
   )
