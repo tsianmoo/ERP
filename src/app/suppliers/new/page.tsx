@@ -473,6 +473,68 @@ export default function AddSupplierPage() {
     }
   }
 
+  // 根据属性值变化触发相关字段的重新生成
+  const triggerFieldGenerationByAttribute = async (attrCode: string, newValue: string) => {
+    // 更新属性值
+    const newAttributeValues = {
+      ...attributeValues,
+      [attrCode]: newValue,
+    }
+    setAttributeValues(newAttributeValues)
+    
+    // 检查哪些字段的编码规则依赖该属性
+    for (const field of basicFields) {
+      if (!field.auto_generate || !field.code_rule_id) continue
+      if (!fieldAutoGenerate[field.field_code]) continue
+      
+      try {
+        // 获取编码规则
+        const response = await fetch(`/api/suppliers/code-rules/${field.code_rule_id}`)
+        const result = await response.json()
+        
+        if (result.data?.elements) {
+          const elements = result.data.elements
+          const dependsOnAttr = elements.some((el: any) => {
+            if (el.type !== 'variable') return false
+            const varName = el.value?.toLowerCase() || ''
+            // 检查变量名是否匹配属性代码
+            return varName === attrCode.toLowerCase() || 
+                   varName === `supplier_${attrCode.toLowerCase()}` ||
+                   varName === attrCode ||
+                   varName === `supplier_${attrCode}`
+          })
+          
+          if (dependsOnAttr) {
+            // 使用新的属性值生成编码
+            const genResponse = await fetch('/api/suppliers/generate-field-value', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                field_code: field.field_code,
+                code_rule_id: field.code_rule_id,
+                basic_field_values: basicFieldValues,
+                attribute_values: newAttributeValues,
+              }),
+            })
+            const genResult = await genResponse.json()
+            if (genResult.success) {
+              setBasicFieldValues(prev => ({
+                ...prev,
+                [field.field_code]: genResult.data.value,
+              }))
+              toast({
+                title: '生成成功',
+                description: `${field.display_name || field.field_name}: ${genResult.data.value}`,
+              })
+            }
+          }
+        }
+      } catch (error) {
+        console.error('生成编码失败:', error)
+      }
+    }
+  }
+
   // 渲染属性字段
   const renderAttribute = (attr: Attribute) => {
     const hasError = !!fieldErrors[`attr_${attr.code}`]
@@ -509,10 +571,9 @@ export default function AddSupplierPage() {
         {attrLabel}
         <Select
           value={attributeValues[attr.code] || ''}
-          onValueChange={(value) => setAttributeValues(prev => ({
-            ...prev,
-            [attr.code]: value,
-          }))}
+          onValueChange={(value) => {
+            triggerFieldGenerationByAttribute(attr.code, value)
+          }}
         >
           <SelectTrigger className={`h-8 text-xs ${hasError ? 'border-red-500' : 'bg-white'}`}>
             <SelectValue placeholder={`请选择${attr.name}`} />
