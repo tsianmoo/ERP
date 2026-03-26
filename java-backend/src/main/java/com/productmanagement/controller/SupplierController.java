@@ -1,10 +1,13 @@
 package com.productmanagement.controller;
 
+import com.productmanagement.dto.GenerateFieldValueRequest;
 import com.productmanagement.dto.SupplierDTO;
+import com.productmanagement.service.FieldValueGeneratorService;
 import com.productmanagement.service.SupplierService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Tag(name = "供应商管理", description = "供应商相关接口")
 @RestController
 @RequestMapping("/api/suppliers")
@@ -20,6 +24,34 @@ import java.util.Map;
 public class SupplierController {
     
     private final SupplierService service;
+    private final FieldValueGeneratorService fieldValueGeneratorService;
+    
+    @Operation(summary = "生成字段值", description = "根据编码规则生成供应商字段值")
+    @PostMapping("/generate-field-value")
+    public ResponseEntity<?> generateFieldValue(@RequestBody GenerateFieldValueRequest request) {
+        try {
+            log.info("生成供应商字段值请求: fieldCode={}, codeRuleId={}, basicFieldValues={}, attributeValues={}",
+                    request.getFieldCode(), request.getCodeRuleId(), request.getBasicFieldValues(), request.getAttributeValues());
+            
+            if (request.getCodeRuleId() == null) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "codeRuleId 不能为空"));
+            }
+            
+            FieldValueGeneratorService.GenerateFieldValueResult result = fieldValueGeneratorService.generateFieldValue(
+                    request.getCodeRuleId(),
+                    request.getBasicFieldValues(),
+                    request.getAttributeValues()
+            );
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "data", Map.of("value", result.getValue())
+            ));
+        } catch (Exception e) {
+            log.error("生成供应商字段值失败", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
     
     @Operation(summary = "获取所有供应商")
     @GetMapping

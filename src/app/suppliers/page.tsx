@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Edit, Trash2, Search, Loader2, FilePlus } from 'lucide-react'
+import { Edit, Trash2, Search, Loader2, FilePlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -14,15 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 
@@ -40,14 +30,6 @@ export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null)
-  const [formData, setFormData] = useState({
-    supplierCode: '',
-    supplierName: '',
-    status: 'active',
-  })
   const { toast } = useToast()
 
   useEffect(() => {
@@ -68,57 +50,8 @@ export default function SuppliersPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
-    try {
-      const url = editingSupplier
-        ? `/api/suppliers/${editingSupplier.id}`
-        : '/api/suppliers'
-      const method = editingSupplier ? 'PUT' : 'POST'
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          supplier_code: formData.supplierCode,
-          supplier_name: formData.supplierName,
-          status: formData.status,
-        }),
-      })
-
-      if (response.ok) {
-        setIsDialogOpen(false)
-        fetchSuppliers()
-        resetForm()
-        toast({
-          title: editingSupplier ? '更新成功' : '添加成功',
-          description: editingSupplier ? '供应商已更新' : '供应商已添加',
-        })
-      } else {
-        const error = await response.json()
-        throw new Error(error.error || '操作失败')
-      }
-    } catch (error) {
-      console.error('保存供应商失败:', error)
-      toast({
-        variant: 'destructive',
-        title: '操作失败',
-        description: error instanceof Error ? error.message : '请重试',
-      })
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const handleEdit = (supplier: Supplier) => {
-    setEditingSupplier(supplier)
-    setFormData({
-      supplierCode: supplier.supplier_code,
-      supplierName: supplier.supplier_name,
-      status: supplier.status || 'active',
-    })
-    setIsDialogOpen(true)
+  const handleEdit = (supplierId: number) => {
+    router.push(`/suppliers/${supplierId}/edit`)
   }
 
   const handleDelete = async (supplierId: number) => {
@@ -146,20 +79,6 @@ export default function SuppliersPage() {
         description: '请重试',
       })
     }
-  }
-
-  const resetForm = () => {
-    setEditingSupplier(null)
-    setFormData({
-      supplierCode: '',
-      supplierName: '',
-      status: 'active',
-    })
-  }
-
-  const openAddDialog = () => {
-    resetForm()
-    setIsDialogOpen(true)
   }
 
   const filteredSuppliers = suppliers.filter(supplier =>
@@ -198,72 +117,12 @@ export default function SuppliersPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button 
-            variant="outline"
             onClick={() => router.push('/suppliers/new')}
           >
             <FilePlus className="h-4 w-4 mr-2" />
-            完整添加
+            添加供应商
           </Button>
-          <Dialog open={isDialogOpen} onOpenChange={(open) => {
-            setIsDialogOpen(open)
-            if (!open) resetForm()
-          }}>
-            <DialogTrigger asChild>
-              <Button onClick={openAddDialog}>
-                <Plus className="h-4 w-4 mr-2" />
-                快速添加
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingSupplier ? '编辑供应商' : '添加供应商'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4 py-4">
-                <div>
-                  <Label htmlFor="supplierCode">供应商编码</Label>
-                  <Input
-                    id="supplierCode"
-                    value={formData.supplierCode}
-                    onChange={(e) => setFormData({ ...formData, supplierCode: e.target.value })}
-                    placeholder="例如：SUP001"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="supplierName">供应商名称</Label>
-                  <Input
-                    id="supplierName"
-                    value={formData.supplierName}
-                    onChange={(e) => setFormData({ ...formData, supplierName: e.target.value })}
-                    placeholder="例如：XX供应商"
-                    required
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="status">启用供应商</Label>
-                  <Switch
-                    id="status"
-                    checked={formData.status === 'active'}
-                    onCheckedChange={(checked) => setFormData({ ...formData, status: checked ? 'active' : 'inactive' })}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  取消
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  保存
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+        </div>
       </div>
 
       {/* Supplier Table */}
@@ -305,7 +164,7 @@ export default function SuppliersPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleEdit(supplier)}
+                        onClick={() => handleEdit(supplier.id)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>

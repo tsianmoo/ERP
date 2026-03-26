@@ -1,5 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { suppliersApi } from '@/lib/java-backend-client';
+
+// GET /api/suppliers/[id] - 获取单个供应商详情
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const result = await suppliersApi.get(parseInt(id));
+
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: result.status || 500 });
+    }
+
+    // 解包嵌套的 data.data 结构
+    const data = result.data as any;
+    if (data && data.data) {
+      return NextResponse.json({ data: data.data });
+    }
+    return NextResponse.json({ data: result.data });
+  } catch (error) {
+    console.error('获取供应商详情失败:', error);
+    return NextResponse.json({ error: '服务器错误' }, { status: 500 });
+  }
+}
 
 // PUT /api/suppliers/[id] - 更新供应商
 export async function PUT(
@@ -7,27 +32,31 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const client = getSupabaseClient();
     const body = await request.json();
     const { id } = await params;
 
-    const { data, error } = await client
-      .from('suppliers')
-      .update({
-        supplier_code: body.supplier_code,
-        supplier_name: body.supplier_name,
-        status: body.status,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', parseInt(id))
-      .select()
-      .single();
+    // 构建请求数据
+    const requestData = {
+      basic_info: {
+        ...body.basicInfo,
+        _attributes: body.attributes,
+      },
+    };
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    const result = await suppliersApi.update(parseInt(id), requestData);
+
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: result.status || 500 });
     }
-    return NextResponse.json({ data });
+
+    // 解包嵌套的 data.data 结构
+    const data = result.data as any;
+    if (data && data.data) {
+      return NextResponse.json({ data: data.data });
+    }
+    return NextResponse.json({ data: result.data });
   } catch (error) {
+    console.error('更新供应商失败:', error);
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
   }
 }
@@ -38,19 +67,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const client = getSupabaseClient();
     const { id } = await params;
+    const result = await suppliersApi.delete(parseInt(id));
 
-    const { error } = await client
-      .from('suppliers')
-      .delete()
-      .eq('id', parseInt(id));
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: result.status || 500 });
     }
+
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('删除供应商失败:', error);
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
   }
 }
