@@ -202,6 +202,11 @@ export default function SupplierBasicInfoPage() {
   const dragStartPos = useRef({ x: 0, y: 0 })
   const dialogStartPos = useRef({ x: 0, y: 0 })
   
+  // 列设置相关
+  const [isColumnSettingsOpen, setIsColumnSettingsOpen] = useState(false)
+  const [tempColumnSettings, setTempColumnSettings] = useState<{ key: string; visible: boolean; frozen: boolean }[]>([])
+  const [tempColumnOrder, setTempColumnOrder] = useState<string[]>([])
+  
   const [formData, setFormData] = useState({
     fieldName: '',
     displayName: '',
@@ -240,36 +245,38 @@ export default function SupplierBasicInfoPage() {
 
   // 默认列配置
   const defaultColumns = [
-    { key: 'checkbox', label: '选择', flex: 0, width: 40 },
-    { key: 'index', label: '序号', flex: 0, width: 50 },
-    { key: 'group', label: '分组', flex: 1 },
-    { key: 'fieldName', label: '字段名称', flex: 1.5 },
-    { key: 'displayName', label: '显示名称', flex: 1 },
-    { key: 'fieldType', label: '类型', flex: 0.8 },
-    { key: 'width', label: '宽度', flex: 0.6 },
-    { key: 'columnWidth', label: '列宽', flex: 0.6 },
-    { key: 'rowIndex', label: '行号', flex: 0.6 },
-    { key: 'isRequired', label: '必选', flex: 0.5 },
-    { key: 'enabled', label: '启用', flex: 0.5 },
-    { key: 'newRow', label: '新行', flex: 0.5 },
-    { key: 'sort', label: '排序', flex: 0.8 },
+    { key: 'checkbox', label: '选择', flex: 0, width: 40, freezable: true },
+    { key: 'index', label: '序号', flex: 0, width: 50, freezable: true },
+    { key: 'group', label: '分组', flex: 1, freezable: true },
+    { key: 'fieldName', label: '字段名称', flex: 1.5, freezable: true },
+    { key: 'displayName', label: '显示名称', flex: 1, freezable: false },
+    { key: 'fieldType', label: '类型', flex: 0.8, freezable: false },
+    { key: 'width', label: '宽度', flex: 0.6, freezable: false },
+    { key: 'columnWidth', label: '列宽', flex: 0.6, freezable: false },
+    { key: 'rowIndex', label: '行号', flex: 0.6, freezable: false },
+    { key: 'isRequired', label: '必选', flex: 0.5, freezable: false },
+    { key: 'enabled', label: '启用', flex: 0.5, freezable: false },
+    { key: 'newRow', label: '新行', flex: 0.5, freezable: false },
+    { key: 'sort', label: '排序', flex: 0.8, freezable: false },
+    { key: 'actions', label: '操作', flex: 0, width: 120, freezable: true },
   ]
 
   const [columnOrder, setColumnOrder] = useState<string[]>(defaultColumns.map(c => c.key))
   const [columnSettings, setColumnSettings] = useState([
-    { key: 'checkbox', visible: true },
-    { key: 'index', visible: true },
-    { key: 'group', visible: true },
-    { key: 'fieldName', visible: true },
-    { key: 'displayName', visible: true },
-    { key: 'fieldType', visible: true },
-    { key: 'width', visible: false },
-    { key: 'columnWidth', visible: false },
-    { key: 'rowIndex', visible: false },
-    { key: 'isRequired', visible: true },
-    { key: 'enabled', visible: true },
-    { key: 'newRow', visible: false },
-    { key: 'sort', visible: true },
+    { key: 'checkbox', visible: true, frozen: true },
+    { key: 'index', visible: true, frozen: false },
+    { key: 'group', visible: true, frozen: false },
+    { key: 'fieldName', visible: true, frozen: false },
+    { key: 'displayName', visible: true, frozen: false },
+    { key: 'fieldType', visible: true, frozen: false },
+    { key: 'width', visible: false, frozen: false },
+    { key: 'columnWidth', visible: false, frozen: false },
+    { key: 'rowIndex', visible: false, frozen: false },
+    { key: 'isRequired', visible: true, frozen: false },
+    { key: 'enabled', visible: true, frozen: false },
+    { key: 'newRow', visible: false, frozen: false },
+    { key: 'sort', visible: true, frozen: false },
+    { key: 'actions', visible: true, frozen: true },
   ])
 
   useEffect(() => {
@@ -278,6 +285,111 @@ export default function SupplierBasicInfoPage() {
     }
     loadData()
   }, [])
+
+  // 初始化列设置
+  useEffect(() => {
+    const saved = localStorage.getItem('supplierBasicFieldColumnSettings')
+    if (saved) {
+      try {
+        const savedSettings = JSON.parse(saved)
+        const existingKeys = new Set(savedSettings.map((s: any) => s.key))
+        // 确保所有默认列都在设置中
+        const mergedSettings = defaultColumns.map(col => {
+          const savedSetting = savedSettings.find((s: any) => s.key === col.key)
+          return savedSetting || { key: col.key, visible: col.key !== 'width' && col.key !== 'columnWidth' && col.key !== 'rowIndex' && col.key !== 'newRow', frozen: col.key === 'checkbox' || col.key === 'actions' }
+        })
+        setColumnSettings(mergedSettings)
+        
+        // 同步列顺序
+        const savedOrder = localStorage.getItem('supplierBasicFieldColumnOrder')
+        if (savedOrder) {
+          const order = JSON.parse(savedOrder)
+          const allKeys = new Set(defaultColumns.map(c => c.key))
+          const validOrder = order.filter((k: string) => allKeys.has(k))
+          const missingKeys = defaultColumns.filter(c => !validOrder.includes(c.key)).map(c => c.key)
+          setColumnOrder([...validOrder, ...missingKeys])
+        }
+      } catch (e) {
+        console.error('加载列设置失败:', e)
+      }
+    }
+  }, [])
+
+  // 保存列设置到 localStorage
+  useEffect(() => {
+    localStorage.setItem('supplierBasicFieldColumnSettings', JSON.stringify(columnSettings))
+  }, [columnSettings])
+
+  useEffect(() => {
+    localStorage.setItem('supplierBasicFieldColumnOrder', JSON.stringify(columnOrder))
+  }, [columnOrder])
+
+  // 列设置处理函数
+  const handleOpenColumnSettings = () => {
+    setTempColumnSettings([...columnSettings])
+    setTempColumnOrder([...columnOrder])
+    setIsColumnSettingsOpen(true)
+  }
+
+  const handleToggleColumnVisible = (key: string) => {
+    setTempColumnSettings(prev => prev.map(setting =>
+      setting.key === key ? { ...setting, visible: !setting.visible } : setting
+    ))
+  }
+
+  const handleToggleColumnFrozen = (key: string) => {
+    setTempColumnSettings(prev => prev.map(setting =>
+      setting.key === key ? { ...setting, frozen: !setting.frozen } : setting
+    ))
+  }
+
+  const handleMoveColumnUp = (key: string) => {
+    const index = tempColumnOrder.indexOf(key)
+    if (index > 0) {
+      const newOrder = [...tempColumnOrder]
+      newOrder.splice(index, 1)
+      newOrder.splice(index - 1, 0, key)
+      setTempColumnOrder(newOrder)
+    }
+  }
+
+  const handleMoveColumnDown = (key: string) => {
+    const index = tempColumnOrder.indexOf(key)
+    if (index < tempColumnOrder.length - 1) {
+      const newOrder = [...tempColumnOrder]
+      newOrder.splice(index, 1)
+      newOrder.splice(index + 1, 0, key)
+      setTempColumnOrder(newOrder)
+    }
+  }
+
+  const handleResetColumnSettings = () => {
+    const defaultSettings = defaultColumns.map(col => ({
+      key: col.key,
+      visible: col.key !== 'width' && col.key !== 'columnWidth' && col.key !== 'rowIndex' && col.key !== 'newRow',
+      frozen: col.key === 'checkbox' || col.key === 'actions',
+    }))
+    setTempColumnSettings(defaultSettings)
+    setTempColumnOrder(defaultColumns.map(c => c.key))
+    toast({
+      title: '列设置已重置',
+      description: '列显示、冻结设置已恢复为默认值',
+    })
+  }
+
+  const handleSaveColumnSettings = () => {
+    setColumnSettings(tempColumnSettings)
+    setColumnOrder(tempColumnOrder)
+    setIsColumnSettingsOpen(false)
+    toast({
+      title: '保存成功',
+      description: '列设置已更新',
+    })
+  }
+
+  const handleCancelColumnSettings = () => {
+    setIsColumnSettingsOpen(false)
+  }
 
   const fetchFields = async () => {
     try {
@@ -1136,6 +1248,20 @@ export default function SupplierBasicInfoPage() {
           />
         </div>
 
+        {/* 列设置按钮 */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={handleOpenColumnSettings}>
+                <Settings2 className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>列设置</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         {/* 添加按钮 */}
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open)
@@ -1510,6 +1636,102 @@ export default function SupplierBasicInfoPage() {
                 </Button>
               </DialogFooter>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* 列设置对话框 */}
+        <Dialog open={isColumnSettingsOpen} onOpenChange={setIsColumnSettingsOpen}>
+          <DialogContent className="max-w-2xl w-[85vw] h-auto max-h-[85vh] overflow-hidden flex flex-col p-0">
+            <DialogHeader className="px-4 py-2.5 border-b flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <DialogTitle className="text-sm">列设置</DialogTitle>
+                <Button variant="outline" size="sm" onClick={handleResetColumnSettings} className="h-7 text-xs px-3">
+                  重置默认
+                </Button>
+              </div>
+            </DialogHeader>
+            
+            <div className="flex-1 overflow-y-auto">
+              {/* 列配置列表 */}
+              <div className="px-4 py-2.5">
+                <div className="text-xs font-medium text-gray-600 mb-2">列配置（拖动调整顺序）</div>
+                
+                <div className="space-y-1">
+                  {tempColumnOrder.map((colKey, index) => {
+                    const col = defaultColumns.find(c => c.key === colKey)
+                    const setting = tempColumnSettings.find(s => s.key === colKey)
+                    if (!col || !setting) return null
+                    
+                    const isFixed = colKey === 'checkbox' || colKey === 'actions'
+
+                    return (
+                      <div
+                        key={colKey}
+                        className={`flex items-center gap-3 px-3 py-2 border rounded-md transition-colors ${isFixed ? 'bg-gray-50/50 border-gray-200' : 'bg-white border-gray-200 hover:border-gray-300'}`}
+                      >
+                        {/* 排序按钮 */}
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                            onClick={() => handleMoveColumnUp(colKey)}
+                            disabled={index === 0}
+                          >
+                            <ChevronUp className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                            onClick={() => handleMoveColumnDown(colKey)}
+                            disabled={index === tempColumnOrder.length - 1}
+                          >
+                            <ChevronDown className="h-3 w-3" />
+                          </Button>
+                        </div>
+
+                        {/* 列名 */}
+                        <span className="text-xs font-medium text-gray-700 min-w-[60px]">{col.label || '-'}</span>
+
+                        {/* 显示/隐藏 */}
+                        <div className="flex items-center gap-1 whitespace-nowrap">
+                          <Switch
+                            checked={setting.visible}
+                            onCheckedChange={() => handleToggleColumnVisible(colKey)}
+                            disabled={isFixed}
+                            className="data-[state=checked]:bg-green-500 scale-75"
+                          />
+                          <span className="text-xs text-gray-500">显示</span>
+                        </div>
+
+                        {/* 冻结 */}
+                        {col.freezable && (
+                          <div className="flex items-center gap-1 whitespace-nowrap ml-auto">
+                            <Switch
+                              checked={setting.frozen}
+                              onCheckedChange={() => handleToggleColumnFrozen(colKey)}
+                              disabled={!setting.visible}
+                              className="data-[state=checked]:bg-blue-500 scale-75"
+                            />
+                            <span className="text-xs text-gray-500">冻结</span>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 px-4 py-2.5 border-t flex-shrink-0 bg-gray-50/30">
+              <Button variant="outline" size="sm" onClick={handleCancelColumnSettings} className="h-8 text-xs px-4">
+                取消
+              </Button>
+              <Button size="sm" onClick={handleSaveColumnSettings} className="h-8 text-xs px-4 bg-blue-500 hover:bg-blue-600">
+                保存
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
