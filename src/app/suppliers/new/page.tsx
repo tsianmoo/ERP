@@ -534,21 +534,28 @@ export default function AddSupplierPage() {
   const renderBasicFieldsByGroup = () => {
     // 按分组归类
     const groupedFields: Record<string, BasicField[]> = {}
+    // 创建分组名称到 sort_order 的映射
+    const groupNameToSortOrder: Record<string, number> = {}
     
     basicFields.forEach(field => {
       const groupName = field.group?.name || '基本信息'
       if (!groupedFields[groupName]) {
         groupedFields[groupName] = []
+        // 通过字段的 group_id 找到分组的 sort_order
+        if (field.group_id && field.group) {
+          const group = groups.find(g => g.id === field.group_id)
+          groupNameToSortOrder[groupName] = group?.sort_order ?? 999999
+        } else {
+          groupNameToSortOrder[groupName] = 999999
+        }
       }
       groupedFields[groupName].push(field)
     })
 
     // 按分组的 sort_order 排序
     const sortedGroupNames = Object.keys(groupedFields).sort((a, b) => {
-      const aGroup = groups.find(g => g.name === a)
-      const bGroup = groups.find(g => g.name === b)
-      const aSortOrder = aGroup?.sort_order ?? 999999
-      const bSortOrder = bGroup?.sort_order ?? 999999
+      const aSortOrder = groupNameToSortOrder[a] ?? 999999
+      const bSortOrder = groupNameToSortOrder[b] ?? 999999
       return aSortOrder - bSortOrder
     })
 
