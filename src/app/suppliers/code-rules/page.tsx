@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ArrowLeft, Plus, Edit, Trash2, Save, GripVertical, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -67,6 +67,11 @@ export default function SupplierCodeRulesPage() {
     elements: [] as CodeElement[],
     isActive: true,
   })
+
+  // 拖拽相关状态
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const dragNodeRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     fetchRules()
@@ -222,6 +227,55 @@ export default function SupplierCodeRulesPage() {
       .join('')
   }
 
+  // 拖拽开始
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    // 添加拖拽样式
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5'
+    }
+  }
+
+  // 拖拽进入
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverIndex(index)
+  }
+
+  // 拖拽离开
+  const handleDragLeave = (e: React.DragEvent) => {
+    // 移除高亮样式
+  }
+
+  // 拖拽结束
+  const handleDragEnd = (e: React.DragEvent) => {
+    // 恢复透明度
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1'
+    }
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  // 放置
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    if (draggedIndex === null || draggedIndex === dropIndex) return
+
+    const newElements = [...formData.elements]
+    const [draggedElement] = newElements.splice(draggedIndex, 1)
+    newElements.splice(dropIndex, 0, draggedElement)
+    
+    // 更新 sort_order
+    const updatedElements = newElements.map((el, i) => ({ ...el, sort_order: i }))
+    
+    setFormData(prev => ({ ...prev, elements: updatedElements }))
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
   // 渲染元素项
   const renderElementItem = (
     element: CodeElement,
@@ -231,9 +285,18 @@ export default function SupplierCodeRulesPage() {
     canRemove: boolean,
     showSequenceConfig: boolean = true
   ) => (
-    <div key={element.id} className="group border-b last:border-b-0">
+    <div 
+      key={element.id} 
+      className={`group border-b last:border-b-0 ${draggedIndex === index ? 'opacity-50' : ''} ${dragOverIndex === index && draggedIndex !== index ? 'border-t-2 border-t-blue-400' : ''}`}
+      draggable
+      onDragStart={(e) => handleDragStart(e, index)}
+      onDragOver={(e) => handleDragOver(e, index)}
+      onDragLeave={handleDragLeave}
+      onDragEnd={handleDragEnd}
+      onDrop={(e) => handleDrop(e, index)}
+    >
       <div className="flex items-center gap-3 py-3">
-        <GripVertical className="h-4 w-4 text-gray-300 cursor-grab flex-shrink-0" />
+        <GripVertical className="h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing flex-shrink-0 hover:text-gray-600" />
         <Switch
           checked={element.enabled}
           onCheckedChange={checked => onUpdate(element.id, 'enabled', checked)}

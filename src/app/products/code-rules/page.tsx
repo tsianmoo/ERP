@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ArrowLeft, Plus, Edit, Trash2, Save, GripVertical, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -72,6 +72,15 @@ export default function CodeRulesPage() {
     barcodeSuffix: '',
     isActive: true,
   })
+
+  // 拖拽相关状态
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const dragNodeRef = useRef<HTMLDivElement | null>(null)
+  
+  // 条码拖拽状态
+  const [barcodeDraggedIndex, setBarcodeDraggedIndex] = useState<number | null>(null)
+  const [barcodeDragOverIndex, setBarcodeDragOverIndex] = useState<number | null>(null)
 
   useEffect(() => {
     fetchRules()
@@ -275,6 +284,86 @@ export default function CodeRulesPage() {
       .join('')
   }
 
+  // 拖拽开始（编码元素）
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5'
+    }
+  }
+
+  // 拖拽进入
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverIndex(index)
+  }
+
+  // 拖拽结束
+  const handleDragEnd = (e: React.DragEvent) => {
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1'
+    }
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  // 放置（编码元素）
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    if (draggedIndex === null || draggedIndex === dropIndex) return
+
+    const newElements = [...formData.elements]
+    const [draggedElement] = newElements.splice(draggedIndex, 1)
+    newElements.splice(dropIndex, 0, draggedElement)
+    
+    const updatedElements = newElements.map((el, i) => ({ ...el, sort_order: i }))
+    setFormData(prev => ({ ...prev, elements: updatedElements }))
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  // 条码拖拽开始
+  const handleBarcodeDragStart = (e: React.DragEvent, index: number) => {
+    setBarcodeDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5'
+    }
+  }
+
+  // 条码拖拽进入
+  const handleBarcodeDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setBarcodeDragOverIndex(index)
+  }
+
+  // 条码拖拽结束
+  const handleBarcodeDragEnd = (e: React.DragEvent) => {
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1'
+    }
+    setBarcodeDraggedIndex(null)
+    setBarcodeDragOverIndex(null)
+  }
+
+  // 条码放置
+  const handleBarcodeDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    if (barcodeDraggedIndex === null || barcodeDraggedIndex === dropIndex) return
+
+    const newElements = [...formData.barcodeElements]
+    const [draggedElement] = newElements.splice(barcodeDraggedIndex, 1)
+    newElements.splice(dropIndex, 0, draggedElement)
+    
+    const updatedElements = newElements.map((el, i) => ({ ...el, sort_order: i }))
+    setFormData(prev => ({ ...prev, barcodeElements: updatedElements }))
+    setBarcodeDraggedIndex(null)
+    setBarcodeDragOverIndex(null)
+  }
+
   // 渲染元素项
   const renderElementItem = (
     element: CodeElement,
@@ -282,83 +371,96 @@ export default function CodeRulesPage() {
     onUpdate: (id: string, field: keyof CodeElement, value: any) => void,
     onRemove: (id: string) => void,
     canRemove: boolean,
-    showSequenceConfig: boolean = true
-  ) => (
-    <div key={element.id} className="group border-b last:border-b-0">
-      <div className="flex items-center gap-3 py-3">
-        <GripVertical className="h-4 w-4 text-gray-300 cursor-grab flex-shrink-0" />
-        <Switch
-          checked={element.enabled}
-          onCheckedChange={checked => onUpdate(element.id, 'enabled', checked)}
-        />
-        <Select
-          value={element.type}
-          onValueChange={value => onUpdate(element.id, 'type', value)}
-        >
-          <SelectTrigger className="w-28 flex-shrink-0">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="fixed">固定字符</SelectItem>
-            <SelectItem value="variable">变量</SelectItem>
-          </SelectContent>
-        </Select>
-        {element.type === 'fixed' ? (
-          <Input
-            value={element.value}
-            onChange={e => onUpdate(element.id, 'value', e.target.value)}
-            placeholder="固定字符"
-            className="flex-1 min-w-0"
+    showSequenceConfig: boolean = true,
+    isBarcode: boolean = false
+  ) => {
+    const currentDraggedIndex = isBarcode ? barcodeDraggedIndex : draggedIndex
+    const currentDragOverIndex = isBarcode ? barcodeDragOverIndex : dragOverIndex
+    
+    return (
+      <div 
+        key={element.id} 
+        className={`group border-b last:border-b-0 ${currentDraggedIndex === index ? 'opacity-50' : ''} ${currentDragOverIndex === index && currentDraggedIndex !== index ? 'border-t-2 border-t-blue-400' : ''}`}
+        draggable
+        onDragStart={(e) => isBarcode ? handleBarcodeDragStart(e, index) : handleDragStart(e, index)}
+        onDragOver={(e) => isBarcode ? handleBarcodeDragOver(e, index) : handleDragOver(e, index)}
+        onDragEnd={isBarcode ? handleBarcodeDragEnd : handleDragEnd}
+        onDrop={(e) => isBarcode ? handleBarcodeDrop(e, index) : handleDrop(e, index)}
+      >
+        <div className="flex items-center gap-3 py-3">
+          <GripVertical className="h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing flex-shrink-0 hover:text-gray-600" />
+          <Switch
+            checked={element.enabled}
+            onCheckedChange={checked => onUpdate(element.id, 'enabled', checked)}
           />
-        ) : (
           <Select
-            value={element.value}
-            onValueChange={value => onUpdate(element.id, 'value', value)}
+            value={element.type}
+            onValueChange={value => onUpdate(element.id, 'type', value)}
           >
-            <SelectTrigger className="flex-1 min-w-0">
-              <SelectValue placeholder="选择变量" />
+            <SelectTrigger className="w-28 flex-shrink-0">
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {variables.builtIn.map(v => (
-                <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>
-              ))}
-              {variables.basicFields.length > 0 && (
-                <>
-                  <SelectItem value="__separator_basic__" disabled>── 基本信息 ──</SelectItem>
-                  {variables.basicFields.map(v => (
-                    <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>
-                  ))}
-                </>
-              )}
-              {variables.attributes.length > 0 && (
-                <>
-                  <SelectItem value="__separator_attributes__" disabled>── 商品属性 ──</SelectItem>
-                  {variables.attributes.map(v => (
-                    <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>
-                  ))}
-                </>
-              )}
+              <SelectItem value="fixed">固定字符</SelectItem>
+              <SelectItem value="variable">变量</SelectItem>
             </SelectContent>
           </Select>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-shrink-0 h-8 w-8 p-0 text-gray-400 hover:text-red-500"
-          onClick={() => onRemove(element.id)}
-          disabled={canRemove}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-      
-      {/* 流水号配置 */}
-      {showSequenceConfig && element.type === 'variable' && element.value === 'sequence' && element.enabled && (
-        <div className="pl-14 pr-10 pb-3">
-          <div className="flex items-center gap-4 p-3 bg-gray-50 rounded border">
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Label className="text-xs text-gray-500">位数</Label>
-              <Select
+          {element.type === 'fixed' ? (
+            <Input
+              value={element.value}
+              onChange={e => onUpdate(element.id, 'value', e.target.value)}
+              placeholder="固定字符"
+              className="flex-1 min-w-0"
+            />
+          ) : (
+            <Select
+              value={element.value}
+              onValueChange={value => onUpdate(element.id, 'value', value)}
+            >
+              <SelectTrigger className="flex-1 min-w-0">
+                <SelectValue placeholder="选择变量" />
+              </SelectTrigger>
+              <SelectContent>
+                {variables.builtIn.map(v => (
+                  <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>
+                ))}
+                {variables.basicFields.length > 0 && (
+                  <>
+                    <SelectItem value="__separator_basic__" disabled>── 基本信息 ──</SelectItem>
+                    {variables.basicFields.map(v => (
+                      <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>
+                    ))}
+                  </>
+                )}
+                {variables.attributes.length > 0 && (
+                  <>
+                    <SelectItem value="__separator_attributes__" disabled>── 商品属性 ──</SelectItem>
+                    {variables.attributes.map(v => (
+                      <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>
+                    ))}
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-shrink-0 h-8 w-8 p-0 text-gray-400 hover:text-red-500"
+            onClick={() => onRemove(element.id)}
+            disabled={canRemove}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* 流水号配置 */}
+        {showSequenceConfig && element.type === 'variable' && element.value === 'sequence' && element.enabled && (
+          <div className="pl-14 pr-10 pb-3">
+            <div className="flex items-center gap-4 p-3 bg-gray-50 rounded border">
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Label className="text-xs text-gray-500">位数</Label>
+                <Select
                 value={String(element.sequence_length || 3)}
                 onValueChange={value => onUpdate(element.id, 'sequence_length', parseInt(value))}
               >
@@ -385,7 +487,8 @@ export default function CodeRulesPage() {
         </div>
       )}
     </div>
-  )
+    )
+  }
 
   return (
     <div className="p-6">
@@ -508,7 +611,7 @@ export default function CodeRulesPage() {
                   
                   <div className="flex-1 overflow-y-auto px-4">
                     {formData.elements.map((element, index) => 
-                      renderElementItem(element, index, updateElement, removeElement, formData.elements.length === 1)
+                      renderElementItem(element, index, updateElement, removeElement, formData.elements.length === 1, true, false)
                     )}
                   </div>
                   
@@ -547,7 +650,7 @@ export default function CodeRulesPage() {
                     <>
                       <div className="flex-1 overflow-y-auto px-4">
                         {formData.barcodeElements.map((element, index) => 
-                          renderElementItem(element, index, updateBarcodeElement, removeBarcodeElement, formData.barcodeElements.length === 1, false)
+                          renderElementItem(element, index, updateBarcodeElement, removeBarcodeElement, formData.barcodeElements.length === 1, false, true)
                         )}
                       </div>
                       
